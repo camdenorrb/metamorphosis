@@ -151,7 +151,7 @@
       </ItemGroup>
     </When>
 	  <When Condition="'$(Configuration)' == 'Debug2025' Or '$(Configuration)' == 'Release2025'">
-		  <ItemGroup>
+		  <ItemGroup Condition="Exists('C:\Program Files\Autodesk\Revit 2025\RevitAPI.dll')">
 			  <Reference Include="RevitAPI">
 				  <HintPath>C:\Program Files\Autodesk\Revit 2025\RevitAPI.dll</HintPath>
 				  <Private>False</Private>
@@ -160,6 +160,15 @@
 				  <HintPath>C:\Program Files\Autodesk\Revit 2025\RevitAPIUI.dll</HintPath>
 				  <Private>False</Private>
 			  </Reference>
+		  </ItemGroup>
+		  <!-- CI fallback: reference-only Revit API packages when Revit is not installed (e.g. GitHub Actions) -->
+		  <ItemGroup Condition="!Exists('C:\Program Files\Autodesk\Revit 2025\RevitAPI.dll')">
+			  <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="2025.0.0">
+				  <ExcludeAssets>runtime</ExcludeAssets>
+			  </PackageReference>
+			  <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="2025.0.0">
+				  <ExcludeAssets>runtime</ExcludeAssets>
+			  </PackageReference>
 		  </ItemGroup>
 	  </When>
     <When Condition="'$(Configuration)' == 'Debug2023' Or '$(Configuration)' == 'Release2023'">
