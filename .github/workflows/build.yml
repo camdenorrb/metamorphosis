@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+# the v4 actions default to deprecated Node 20; opt in to Node 24 ahead of GitHub's forced switch
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
     runs-on: windows-latest
