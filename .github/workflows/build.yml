@@ -42,6 +42,9 @@ jobs:
           $out = "src/MetamorphosisCore/bin/Release${{ matrix.revit }}/net8.0-windows"
           New-Item -ItemType Directory -Path "artifact/Metamorphosis" -Force | Out-Null
           Copy-Item "$out/*" "artifact/Metamorphosis" -Recurse
+          # System.Data.SQLite needs the native interop DLL next to the managed one;
+          # Revit's addin loader does not probe the runtimes/ folder.
+          Copy-Item "$out/runtimes/win-x64/native/SQLite.Interop.dll" "artifact/Metamorphosis/"
           Copy-Item "src/MetaInstaller/MetamorphosisCore.addin" "artifact/"
 
       - name: Upload addin artifact
@@ -49,4 +52,44 @@ jobs:
         with:
           name: Metamorphosis-Revit${{ matrix.revit }}
           path: artifact/
+          if-no-files-found: error
+
+  msi:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Build MetamorphosisCore (Revit 2026)
+        run: dotnet build src/MetamorphosisCore/MetamorphosisCore.csproj -c Release
+
+      - name: Build MetamorphosisCore (Revit 2025)
+        run: dotnet build src/MetamorphosisCore/MetamorphosisCore.csproj -c Release2025
+
+      - name: Install WiX Toolset 3.14
+        run: choco install wixtoolset -y --no-progress
+
+      - name: Build MSI (Revit 2025-2026)
+        shell: pwsh
+        run: |
+          $wix = "${env:ProgramFiles(x86)}\WiX Toolset v3.14\bin"
+          if (!(Test-Path "$wix\candle.exe")) {
+            $wix = (Get-ChildItem "${env:ProgramFiles(x86)}\WiX Toolset*\bin\candle.exe" | Select-Object -First 1).DirectoryName
+          }
+          New-Item -ItemType Directory -Path out -Force | Out-Null
+          & "$wix\candle.exe" -nologo -dProjectDir="$PWD\src\MetaInstaller\" -o out\Product2025Plus.wixobj src\MetaInstaller\Product2025Plus.wxs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & "$wix\light.exe" -nologo -sval -o out\MetamorphosisInstaller-Revit2025-2026.msi out\Product2025Plus.wixobj
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Upload MSI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MetamorphosisInstaller-Revit2025-2026
+          path: out/*.msi
           if-no-files-found: error
