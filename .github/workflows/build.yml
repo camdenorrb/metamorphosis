@@ -1,0 +1,41 @@
+name: Build Addin
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Build MetamorphosisCore (Revit 2026)
+        run: dotnet build src/MetamorphosisCore/MetamorphosisCore.csproj -c Release
+
+      - name: Stage addin layout
+        shell: pwsh
+        run: |
+          $out = "src/MetamorphosisCore/bin/Release2026/net8.0-windows"
+          New-Item -ItemType Directory -Path "artifact/Metamorphosis" -Force | Out-Null
+          Copy-Item "$out/*" "artifact/Metamorphosis" -Recurse
+          Copy-Item "src/MetaInstaller/MetamorphosisCore.addin" "artifact/"
+
+      - name: Upload addin artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Metamorphosis-Revit2026
+          path: artifact/
+          if-no-files-found: error
