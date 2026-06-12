@@ -24,6 +24,8 @@ jobs:
             config: Release
           - revit: 2025
             config: Release2025
+          - revit: 2024
+            config: Release2024
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -71,10 +73,13 @@ jobs:
       - name: Build MetamorphosisCore (Revit 2025)
         run: dotnet build src/MetamorphosisCore/MetamorphosisCore.csproj -c Release2025
 
+      - name: Build MetamorphosisCore (Revit 2024)
+        run: dotnet build src/MetamorphosisCore/MetamorphosisCore.csproj -c Release2024
+
       - name: Install WiX Toolset 3.14
         run: choco install wixtoolset -y --no-progress
 
-      - name: Build MSI (Revit 2025-2026)
+      - name: Build MSI (Revit 2024-2026)
         shell: pwsh
         run: |
           $wix = "${env:ProgramFiles(x86)}\WiX Toolset v3.14\bin"
@@ -82,14 +87,14 @@ jobs:
             $wix = (Get-ChildItem "${env:ProgramFiles(x86)}\WiX Toolset*\bin\candle.exe" | Select-Object -First 1).DirectoryName
           }
           New-Item -ItemType Directory -Path out -Force | Out-Null
-          & "$wix\candle.exe" -nologo -dProjectDir="$PWD\src\MetaInstaller\" -o out\Product2025Plus.wixobj src\MetaInstaller\Product2025Plus.wxs
+          & "$wix\candle.exe" -nologo -dProjectDir="$PWD\src\MetaInstaller\" -o out\Product2024Plus.wixobj src\MetaInstaller\Product2024Plus.wxs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          & "$wix\light.exe" -nologo -sval -o out\MetamorphosisInstaller-Revit2025-2026.msi out\Product2025Plus.wixobj
+          & "$wix\light.exe" -nologo -sval -o out\MetamorphosisInstaller-Revit2024-2026.msi out\Product2024Plus.wixobj
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Upload MSI artifact
         uses: actions/upload-artifact@v4
         with:
-          name: MetamorphosisInstaller-Revit2025-2026
+          name: MetamorphosisInstaller-Revit2024-2026
           path: out/*.msi
           if-no-files-found: error

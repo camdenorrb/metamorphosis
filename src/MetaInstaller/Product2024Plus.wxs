@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  CI-buildable installer covering Revit 2024, 2025, and 2026.
+  The full Product.wxs additionally packages Revit 2015-2023, which require
+  legacy .NET Framework builds (and their era's RevitAPI.dll) that are not
+  available on CI runners. Component GUIDs and the UpgradeCode match
+  Product.wxs so installs from either MSI upgrade each other cleanly.
+-->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+	<Product Id="*" Name="Metamorphosis for Revit (2024-2026)" Language="1033" Version="3.2.0.0" Manufacturer="NYC Hackathon Team 14" UpgradeCode="cbce84ae-9576-496e-9cbc-363956edbf13">
+		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+
+		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+		<MediaTemplate EmbedCab="yes"/>
+
+		<Feature Id="Revit2026Install" Title="Revit 2026" Level="1">
+			<ComponentRef Id="Addin2026" />
+			<ComponentRef Id="MetamorphosisDLL2026" />
+			<ComponentRef Id="NewtonSoft2026" />
+			<ComponentRef Id="SQLite2026" />
+			<ComponentRef Id="SQLiteInterop2026"/>
+			<ComponentRef Id="EFDLL2026"/>
+			<ComponentRef Id="EFSQLDLL2026"/>
+			<ComponentRef Id="Settings2026.xml"/>
+		</Feature>
+		<Feature Id="Revit2025Install" Title="Revit 2025" Level="1">
+			<ComponentRef Id="Addin2025" />
+			<ComponentRef Id="MetamorphosisDLL2025" />
+			<ComponentRef Id="NewtonSoft2025" />
+			<ComponentRef Id="SQLite2025" />
+			<ComponentRef Id="SQLiteInterop2025"/>
+			<ComponentRef Id="EFDLL2025"/>
+			<ComponentRef Id="EFSQLDLL2025"/>
+			<ComponentRef Id="Settings2025.xml"/>
+		</Feature>
+		<Feature Id="Revit2024Install" Title="Revit 2024" Level="1">
+			<ComponentRef Id="Addin2024" />
+			<ComponentRef Id="MetamorphosisDLL2024" />
+			<ComponentRef Id="NewtonSoft2024" />
+			<ComponentRef Id="SQLite2024" />
+			<ComponentRef Id="SQLiteInterop2024"/>
+			<ComponentRef Id="EFDLL2024"/>
+			<ComponentRef Id="EFSQLDLL2024"/>
+			<ComponentRef Id="Settings2024.xml"/>
+		</Feature>
+	</Product>
+
+	<!-- Directory Structure for install -->
+	<Fragment>
+		<Directory Id="TARGETDIR" Name="SourceDir">
+			<Directory Id="CommonAppDataFolder" Name="ProgramData">
+				<Directory Id="AUTODESKFOLDER" Name="Autodesk">
+					<Directory Id="REVITFOLDER" Name="Revit">
+						<Directory Id="ADDINSFOLDER" Name="Addins">
+
+							<Directory Id="ADDINS2026" Name="2026">
+								<Directory Id="BUNDLEFOLDER2026" Name="Metamorphosis">
+								</Directory>
+							</Directory>
+							<Directory Id="ADDINS2025" Name="2025">
+								<Directory Id="BUNDLEFOLDER2025" Name="Metamorphosis">
+								</Directory>
+							</Directory>
+							<Directory Id="ADDINS2024" Name="2024">
+								<Directory Id="BUNDLEFOLDER2024" Name="Metamorphosis">
+								</Directory>
+							</Directory>
+
+						</Directory>
+					</Directory>
+				</Directory>
+			</Directory>
+		</Directory>
+	</Fragment>
+
+	<Fragment>
+
+		<!-- 2026 -->
+		<DirectoryRef Id="ADDINS2026">
+			<Component Id="Addin2026" Guid="{EB93C667-4753-435B-9D77-8774AB232026}" DiskId="1">
+				<CreateFolder/>
+				<File Id="Metamorphosis.addin2026" Name="Metamorphosis.addin" Source="$(var.ProjectDir)MetamorphosisCore.addin" Checksum="no"/>
+			</Component>
+		</DirectoryRef>
+
+		<DirectoryRef Id="BUNDLEFOLDER2026">
+			<Component Id="MetamorphosisDLL2026" Guid="{E61E1DDE-F92A-44E4-99FF-8D08507F2026}" DiskId="1">
+				<CreateFolder/>
+				<RemoveFolder Id="RemoveBundle2026" On="uninstall"/>
+				<File Id="MetamorphosisCore.dll2026" Name="MetamorphosisCore.dll" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2026\net8.0-windows\MetamorphosisCore.dll" Checksum="no"/>
+				<File Id="MetamorphosisCore.deps.json2026" Name="MetamorphosisCore.deps.json" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2026\net8.0-windows\MetamorphosisCore.deps.json" Checksum="no"/>
+				<File Id="MetamorphosisCore.dll.config2026" Name="MetamorphosisCore.dll.config" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2026\net8.0-windows\MetamorphosisCore.dll.config" Checksum="no"/>
+				<File Id="MetamorphosisCore.runtimeconfig.json2026" Name="MetamorphosisCore.runtimeconfig.json" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2026\net8.0-windows\MetamorphosisCore.runtimeconfig.json" Checksum="no"/>
+			</Component>
+			<Component Id="NewtonSoft2026" Guid="{EC47822D-43CE-4E3A-85B2-E39616822026}" DiskId="1">
+				<File Id="NewtonSoft2026" Name="Newtonsoft.Json.dll" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2026\net8.0-windows\Newtonsoft.Json.dll" Checksum="no"/>
+			</Component>
+			<Component Id="SQLite2026" Guid="{EFF1EEA0-8CC2-48A7-8865-D36BCD592026}" DiskId="1">
+				<File Id="SQLite2026" Name="System.Data.SQLite.dll" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2026\net8.0-windows\System.Data.SQLite.dll" Checksum="no"/>
+			</Component>
+			<Component Id="Settings2026.xml" Guid="{EAD42FD5-720D-4EAE-871E-C7D10D502026}" DiskId="1">
+				<File Id="Settings2026" Name="Settings.xml" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2026\net8.0-windows\Settings.xml" Checksum="no"/>
+			</Component>
+			<Component Id="SQLiteInterop2026" Guid="{ED743C72-6984-4009-B440-2763207A2026}" DiskId="1">
+				<File Id="SQLiteInterop2026" Name="SQLite.Interop.dll" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2026\net8.0-windows\runtimes\win-x64\native\SQLite.Interop.dll" Checksum="no"/>
+			</Component>
+			<Component Id="EFDLL2026" Guid="{EC713C72-6984-4009-B440-2763207A2026}" DiskId="1">
+				<File Id="EFDLL2026" Name="EntityFramework.dll" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2026\net8.0-windows\EntityFramework.dll" Checksum="no"/>
+			</Component>
+			<Component Id="EFSQLDLL2026" Guid="{EC71AC72-6984-4009-B440-2763207A2026}" DiskId="1">
+				<File Id="EFSQLDLL2026" Name="EntityFramework.SqlServer.dll" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2026\net8.0-windows\EntityFramework.SqlServer.dll" Checksum="no"/>
+			</Component>
+		</DirectoryRef>
+
+		<!-- 2025 -->
+		<DirectoryRef Id="ADDINS2025">
+			<Component Id="Addin2025" Guid="{EB93C667-4753-435B-9D77-8774AB232025}" DiskId="1">
+				<CreateFolder/>
+				<File Id="Metamorphosis.addin2025" Name="Metamorphosis.addin" Source="$(var.ProjectDir)MetamorphosisCore.addin" Checksum="no"/>
+			</Component>
+		</DirectoryRef>
+
+		<DirectoryRef Id="BUNDLEFOLDER2025">
+			<Component Id="MetamorphosisDLL2025" Guid="{E61E1DDE-F92A-44E4-99FF-8D08507F2025}" DiskId="1">
+				<CreateFolder/>
+				<RemoveFolder Id="RemoveBundle2025" On="uninstall"/>
+				<File Id="MetamorphosisCore.dll2025" Name="MetamorphosisCore.dll" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2025\net8.0-windows\MetamorphosisCore.dll" Checksum="no"/>
+				<File Id="MetamorphosisCore.deps.json2025" Name="MetamorphosisCore.deps.json" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2025\net8.0-windows\MetamorphosisCore.deps.json" Checksum="no"/>
+				<File Id="MetamorphosisCore.dll.config2025" Name="MetamorphosisCore.dll.config" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2025\net8.0-windows\MetamorphosisCore.dll.config" Checksum="no"/>
+				<File Id="MetamorphosisCore.runtimeconfig.json2025" Name="MetamorphosisCore.runtimeconfig.json" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2025\net8.0-windows\MetamorphosisCore.runtimeconfig.json" Checksum="no"/>
+			</Component>
+			<Component Id="NewtonSoft2025" Guid="{EC47822D-43CE-4E3A-85B2-E39616822025}" DiskId="1">
+				<File Id="NewtonSoft2025" Name="Newtonsoft.Json.dll" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2025\net8.0-windows\Newtonsoft.Json.dll" Checksum="no"/>
+			</Component>
+			<Component Id="SQLite2025" Guid="{EFF1EEA0-8CC2-48A7-8865-D36BCD592025}" DiskId="1">
+				<File Id="SQLite2025" Name="System.Data.SQLite.dll" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2025\net8.0-windows\System.Data.SQLite.dll" Checksum="no"/>
+			</Component>
+			<Component Id="Settings2025.xml" Guid="{EAD42FD5-720D-4EAE-871E-C7D10D502025}" DiskId="1">
+				<File Id="Settings2025" Name="Settings.xml" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2025\net8.0-windows\Settings.xml" Checksum="no"/>
+			</Component>
+			<Component Id="SQLiteInterop2025" Guid="{ED743C72-6984-4009-B440-2763207A2025}" DiskId="1">
+				<File Id="SQLiteInterop2025" Name="SQLite.Interop.dll" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2025\net8.0-windows\runtimes\win-x64\native\SQLite.Interop.dll" Checksum="no"/>
+			</Component>
+			<Component Id="EFDLL2025" Guid="{EC713C72-6984-4009-B440-2763207A2025}" DiskId="1">
+				<File Id="EFDLL2025" Name="EntityFramework.dll" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2025\net8.0-windows\EntityFramework.dll" Checksum="no"/>
+			</Component>
+			<Component Id="EFSQLDLL2025" Guid="{EC71AC72-6984-4009-B440-2763207A2025}" DiskId="1">
+				<File Id="EFSQLDLL2025" Name="EntityFramework.SqlServer.dll" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2025\net8.0-windows\EntityFramework.SqlServer.dll" Checksum="no"/>
+			</Component>
+		</DirectoryRef>
+
+		<!-- 2024 -->
+		<DirectoryRef Id="ADDINS2024">
+			<Component Id="Addin2024" Guid="{EB93C667-4753-435B-9D77-8774AB232024}" DiskId="1">
+				<CreateFolder/>
+				<File Id="Metamorphosis.addin2024" Name="Metamorphosis.addin" Source="$(var.ProjectDir)MetamorphosisCore.addin" Checksum="no"/>
+			</Component>
+		</DirectoryRef>
+
+		<DirectoryRef Id="BUNDLEFOLDER2024">
+			<Component Id="MetamorphosisDLL2024" Guid="{E61E1DDE-F92A-44E4-99FF-8D08507F2024}" DiskId="1">
+				<CreateFolder/>
+				<RemoveFolder Id="RemoveBundle2024" On="uninstall"/>
+				<File Id="MetamorphosisCore.dll2024" Name="MetamorphosisCore.dll" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2024\net8.0-windows\MetamorphosisCore.dll" Checksum="no"/>
+				<File Id="MetamorphosisCore.deps.json2024" Name="MetamorphosisCore.deps.json" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2024\net8.0-windows\MetamorphosisCore.deps.json" Checksum="no"/>
+				<File Id="MetamorphosisCore.dll.config2024" Name="MetamorphosisCore.dll.config" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2024\net8.0-windows\MetamorphosisCore.dll.config" Checksum="no"/>
+				<File Id="MetamorphosisCore.runtimeconfig.json2024" Name="MetamorphosisCore.runtimeconfig.json" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2024\net8.0-windows\MetamorphosisCore.runtimeconfig.json" Checksum="no"/>
+			</Component>
+			<Component Id="NewtonSoft2024" Guid="{EC47822D-43CE-4E3A-85B2-E39616822024}" DiskId="1">
+				<File Id="NewtonSoft2024" Name="Newtonsoft.Json.dll" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2024\net8.0-windows\Newtonsoft.Json.dll" Checksum="no"/>
+			</Component>
+			<Component Id="SQLite2024" Guid="{EFF1EEA0-8CC2-48A7-8865-D36BCD592024}" DiskId="1">
+				<File Id="SQLite2024" Name="System.Data.SQLite.dll" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2024\net8.0-windows\System.Data.SQLite.dll" Checksum="no"/>
+			</Component>
+			<Component Id="Settings2024.xml" Guid="{EAD42FD5-720D-4EAE-871E-C7D10D502024}" DiskId="1">
+				<File Id="Settings2024" Name="Settings.xml" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2024\net8.0-windows\Settings.xml" Checksum="no"/>
+			</Component>
+			<Component Id="SQLiteInterop2024" Guid="{ED743C72-6984-4009-B440-2763207A2024}" DiskId="1">
+				<File Id="SQLiteInterop2024" Name="SQLite.Interop.dll" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2024\net8.0-windows\runtimes\win-x64\native\SQLite.Interop.dll" Checksum="no"/>
+			</Component>
+			<Component Id="EFDLL2024" Guid="{EC713C72-6984-4009-B440-2763207A2024}" DiskId="1">
+				<File Id="EFDLL2024" Name="EntityFramework.dll" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2024\net8.0-windows\EntityFramework.dll" Checksum="no"/>
+			</Component>
+			<Component Id="EFSQLDLL2024" Guid="{EC71AC72-6984-4009-B440-2763207A2024}" DiskId="1">
+				<File Id="EFSQLDLL2024" Name="EntityFramework.SqlServer.dll" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2024\net8.0-windows\EntityFramework.SqlServer.dll" Checksum="no"/>
+			</Component>
+		</DirectoryRef>
+
+	</Fragment>
+</Wix>
