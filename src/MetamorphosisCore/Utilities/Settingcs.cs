@@ -168,6 +168,7 @@ namespace Metamorphosis.Utilities
             if (_doc != null) return;
 
             _doc = new XmlDocument();
+            _doc.XmlResolver = null; // do not resolve external entities
 
             
                 string filename = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Settings.xml");

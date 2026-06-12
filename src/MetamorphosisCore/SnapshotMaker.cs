@@ -191,11 +191,11 @@ namespace Metamorphosis
                     {
                         foreach (Element e in elements)
                         {
-                            string versionGuid = "NULL";
+                            string versionGuid = null;
 #if REVIT2015 || REVIT2016 || REVIT2017 || REVIT2018 || REVIT2019 || REVIT2020
                             // we do nothing
 #else
-                            if (e.VersionGuid != null) versionGuid = String.Format("'{0}'", e.VersionGuid);
+                            if (e.VersionGuid != null) versionGuid = e.VersionGuid.ToString();
 #endif
                             Category c = e.Category;
                             if (c == null)
@@ -204,9 +204,13 @@ namespace Metamorphosis
                                 if (fs != null) c = fs.Family.FamilyCategory;
                             }
                             string catName = (c != null) ? c.Name : "(none)";
-                            if (catName.Contains("'")) catName = catName.Replace("'", "''");
                             var cmd = conn.CreateCommand();
-                            cmd.CommandText = String.Format("INSERT INTO _objects_id (id,external_id,category,isType,versionguid) VALUES({0},'{1}','{2}',{3},{4})", e.Id.AsLong(), e.UniqueId, catName, (isTypes) ? 1 : 0, versionGuid);
+                            cmd.CommandText = "INSERT INTO _objects_id (id,external_id,category,isType,versionguid) VALUES(@id,@external_id,@category,@isType,@versionguid)";
+                            cmd.Parameters.AddWithValue("@id", e.Id.AsLong());
+                            cmd.Parameters.AddWithValue("@external_id", e.UniqueId);
+                            cmd.Parameters.AddWithValue("@category", catName);
+                            cmd.Parameters.AddWithValue("@isType", (isTypes) ? 1 : 0);
+                            cmd.Parameters.AddWithValue("@versionguid", (object)versionGuid ?? DBNull.Value);
                             currentQuery = cmd.CommandText;
 
                             cmd.ExecuteNonQuery();
@@ -240,9 +244,9 @@ namespace Metamorphosis
                         {
 
                             var cmd = conn.CreateCommand();
-                            string val = pair.Value.Replace("'", "''");
-
-                            cmd.CommandText = String.Format("INSERT INTO _objects_header (keyword,value) VALUES('{0}','{1}')", pair.Key, pair.Value);
+                            cmd.CommandText = "INSERT INTO _objects_header (keyword,value) VALUES(@keyword,@value)";
+                            cmd.Parameters.AddWithValue("@keyword", pair.Key);
+                            cmd.Parameters.AddWithValue("@value", pair.Value);
                             currentQuery = cmd.CommandText;
 
                             cmd.ExecuteNonQuery();
@@ -272,20 +276,22 @@ namespace Metamorphosis
                         foreach (var pair in _paramDict)
                         {
                             string name = pair.Value.Definition.Name;
-                            if (name.Contains("'")) name = name.Replace("'", "''");
                             var cmd = conn.CreateCommand();
 
 #if REVIT2015 || REVIT2016 || REVIT2017 || REVIT2018 || REVIT2019 || REVIT2020 || REVIT2021 || REVIT2022 || REVIT2023
-                            var group = LabelUtils.GetLabelFor(pair.Value.Definition.ParameterGroup).Replace("'", "''");
+                            var group = LabelUtils.GetLabelFor(pair.Value.Definition.ParameterGroup);
                             // maybe we don't need? (int)pair.Value.Definition.ParameterGroup
 #else  // newer
-                            //var group = LabelUtils.GetLabelFor(pair.Value.Definition.ParameterGroup).Replace("'", "''");
                             var groupForgeId = pair.Value.Definition.GetGroupTypeId();
                             var group = LabelUtils.GetLabelForGroup(groupForgeId);
                             // maybe we don't need the PArameterGroupId?
 
 #endif
-                            cmd.CommandText = String.Format("INSERT INTO _objects_attr (id,name,category,data_type) VALUES({0},'{1}','{2}',{3})", pair.Value.Id.AsLong(), name, group,-1 );
+                            cmd.CommandText = "INSERT INTO _objects_attr (id,name,category,data_type) VALUES(@id,@name,@category,@data_type)";
+                            cmd.Parameters.AddWithValue("@id", pair.Value.Id.AsLong());
+                            cmd.Parameters.AddWithValue("@name", name);
+                            cmd.Parameters.AddWithValue("@category", group);
+                            cmd.Parameters.AddWithValue("@data_type", -1);
                             currentQuery = cmd.CommandText;
 
                             cmd.ExecuteNonQuery();
@@ -315,10 +321,10 @@ namespace Metamorphosis
                     {
                         foreach (var pair in _valueDict)
                         {
-                            string val = pair.Key;
-                            if (val.Contains("'")) val = val.Replace("'", "''"); // need to escape single quotes.
                             var cmd = conn.CreateCommand();
-                            cmd.CommandText = String.Format("INSERT INTO _objects_val (id,value) VALUES({0},'{1}')", pair.Value, val);
+                            cmd.CommandText = "INSERT INTO _objects_val (id,value) VALUES(@id,@value)";
+                            cmd.Parameters.AddWithValue("@id", pair.Value);
+                            cmd.Parameters.AddWithValue("@value", pair.Key);
 
                             cmd.ExecuteNonQuery();
                         }
@@ -381,7 +387,10 @@ namespace Metamorphosis
 
 
                                 var cmd = conn.CreateCommand();
-                                cmd.CommandText = String.Format("INSERT INTO _objects_eav (entity_id,attribute_id,value_id) VALUES({0},{1},{2})", e.Id.AsLong(), p.Id.AsLong(), _valueDict[val]);
+                                cmd.CommandText = "INSERT INTO _objects_eav (entity_id,attribute_id,value_id) VALUES(@entity_id,@attribute_id,@value_id)";
+                                cmd.Parameters.AddWithValue("@entity_id", e.Id.AsLong());
+                                cmd.Parameters.AddWithValue("@attribute_id", p.Id.AsLong());
+                                cmd.Parameters.AddWithValue("@value_id", _valueDict[val]);
                                 currentQuery = cmd.CommandText;
 
                                 cmd.ExecuteNonQuery();
@@ -531,7 +540,14 @@ namespace Metamorphosis
                         if (lev != null) levName = lev.Name;
 
                             var cmd = conn.CreateCommand();
-                        cmd.CommandText = String.Format("INSERT INTO _objects_geom (id,BoundingBoxMin,BoundingBoxMax,Location,Location2,Level,Rotation) VALUES({0},'{1}','{2}','{3}','{4}','{5}',{6})", e.Id.AsLong(), bbMin, bbMax, lp, lp2, escapeQuote(levName), rotation.ToString(CultureInfo.InvariantCulture));
+                        cmd.CommandText = "INSERT INTO _objects_geom (id,BoundingBoxMin,BoundingBoxMax,Location,Location2,Level,Rotation) VALUES(@id,@BoundingBoxMin,@BoundingBoxMax,@Location,@Location2,@Level,@Rotation)";
+                        cmd.Parameters.AddWithValue("@id", e.Id.AsLong());
+                        cmd.Parameters.AddWithValue("@BoundingBoxMin", bbMin);
+                        cmd.Parameters.AddWithValue("@BoundingBoxMax", bbMax);
+                        cmd.Parameters.AddWithValue("@Location", lp);
+                        cmd.Parameters.AddWithValue("@Location2", lp2);
+                        cmd.Parameters.AddWithValue("@Level", levName);
+                        cmd.Parameters.AddWithValue("@Rotation", rotation);
 
                         if (_logLevel == Utilities.Settings.LogLevel.Verbose) _doc.Application.WriteJournalComment(cmd.CommandText,false);
 
@@ -565,11 +581,6 @@ namespace Metamorphosis
             return lev;
         }
         
-        private string escapeQuote(string input)
-        {
-            return input.Replace("'", "''");
-        }
-
 #endregion
     }
 }

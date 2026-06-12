@@ -102,7 +102,13 @@ namespace Metamorphosis
         public static ChangeSummary DeSerialize(string filename)
         {
             string content = System.IO.File.ReadAllText(filename);
-            ChangeSummary cs = Newtonsoft.Json.JsonConvert.DeserializeObject<ChangeSummary>(content);
+            // never honor embedded type names, and cap nesting depth, since this file may come from an untrusted source.
+            var settings = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                TypeNameHandling = Newtonsoft.Json.TypeNameHandling.None,
+                MaxDepth = 64
+            };
+            ChangeSummary cs = Newtonsoft.Json.JsonConvert.DeserializeObject<ChangeSummary>(content, settings);
 
             return cs;
         }
