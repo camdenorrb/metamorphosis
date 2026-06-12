@@ -880,7 +880,7 @@ namespace Metamorphosis
 #if REVIT2015 || REVIT2016 || REVIT2017 || REVIT2018 || REVIT2019 || REVIT2020
                 // do nothing here
 #else
-            if (e.VersionGuid != null) revitElem.VersionGuid = e.VersionGuid.ToString();
+            if (e.VersionGuid != Guid.Empty) revitElem.VersionGuid = e.VersionGuid.ToString();
 #endif
 
             if (withParams)

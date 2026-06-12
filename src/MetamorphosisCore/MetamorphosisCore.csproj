@@ -142,10 +142,10 @@
       </ItemGroup>
       <!-- CI fallback: reference-only Revit API packages when Revit is not installed (e.g. GitHub Actions) -->
       <ItemGroup Condition="!Exists('C:\Program Files\Autodesk\Revit 2026\RevitAPI.dll')">
-        <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="2026.0.0">
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="2026.0.4">
           <ExcludeAssets>runtime</ExcludeAssets>
         </PackageReference>
-        <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="2026.0.0">
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="2026.0.4">
           <ExcludeAssets>runtime</ExcludeAssets>
         </PackageReference>
       </ItemGroup>
@@ -163,10 +163,10 @@
 		  </ItemGroup>
 		  <!-- CI fallback: reference-only Revit API packages when Revit is not installed (e.g. GitHub Actions) -->
 		  <ItemGroup Condition="!Exists('C:\Program Files\Autodesk\Revit 2025\RevitAPI.dll')">
-			  <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="2025.0.0">
+			  <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="2025.0.2">
 				  <ExcludeAssets>runtime</ExcludeAssets>
 			  </PackageReference>
-			  <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="2025.0.0">
+			  <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="2025.0.2">
 				  <ExcludeAssets>runtime</ExcludeAssets>
 			  </PackageReference>
 		  </ItemGroup>

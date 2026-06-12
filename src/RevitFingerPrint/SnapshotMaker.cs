@@ -193,7 +193,7 @@ namespace Metamorphosis
 #if REVIT2015 || REVIT2016 || REVIT2017 || REVIT2018 || REVIT2019 || REVIT2020
                             // we do nothing
 #else
-                            if (e.VersionGuid != null) versionGuid = e.VersionGuid.ToString();
+                            if (e.VersionGuid != Guid.Empty) versionGuid = e.VersionGuid.ToString();
 #endif
                             Category c = e.Category;
                             if (c == null)
