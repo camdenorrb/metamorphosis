@@ -8,6 +8,9 @@ using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Metamorphosis.Repository;
+using TaskDialog = Autodesk.Revit.UI.TaskDialog;
+using WinForm = System.Windows.Forms.Form;
+using WinControl = System.Windows.Forms.Control;
 
 namespace Metamorphosis.Git.Commands
 {
@@ -101,7 +104,7 @@ namespace Metamorphosis.Git.Commands
 
         private static Metamorphosis.Objects.CommitInfo PickCommit(IList<Metamorphosis.Objects.CommitInfo> commits)
         {
-            using var dlg = new Form();
+            using var dlg = new WinForm();
             dlg.Text = "Metamorphosis Git — Select Commit to Roll Back To";
             dlg.Width = 600;
             dlg.Height = 360;
@@ -117,7 +120,7 @@ namespace Metamorphosis.Git.Commands
             var cancel = new Button { Text = "Cancel", Left = 492, Top = 288, Width = 80, Height = 28, DialogResult = DialogResult.Cancel };
             dlg.AcceptButton = ok;
             dlg.CancelButton = cancel;
-            dlg.Controls.AddRange(new Control[] { list, ok, cancel });
+            dlg.Controls.AddRange(new WinControl[] { list, ok, cancel });
 
             if (dlg.ShowDialog() != DialogResult.OK || list.SelectedIndex < 0)
                 return null;
