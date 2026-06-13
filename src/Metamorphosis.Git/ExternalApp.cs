@@ -1,14 +1,26 @@
 using System;
+using Autodesk.Revit.ApplicationServices;
+using Autodesk.Revit.DB.Events;
 using Autodesk.Revit.UI;
+using Metamorphosis.Git.Commands;
 
 namespace Metamorphosis.Git
 {
     public class ExternalApp : IExternalApplication
     {
+        private AutoCommitEventHandler _autoCommitHandler;
+        private ExternalEvent _autoCommitEvent;
+
         public Result OnStartup(UIControlledApplication application)
         {
             try
             {
+                _autoCommitHandler = new AutoCommitEventHandler();
+                _autoCommitEvent = ExternalEvent.Create(_autoCommitHandler);
+
+                application.ControlledApplication.DocumentSaved += OnDocumentSaved;
+                application.ControlledApplication.DocumentSynchronizedWithCentral += OnDocumentSynchronized;
+
                 BuildUI(application);
                 return Result.Succeeded;
             }
@@ -23,7 +35,24 @@ namespace Metamorphosis.Git
         }
 
         public Result OnShutdown(UIControlledApplication application)
-            => Result.Succeeded;
+        {
+            application.ControlledApplication.DocumentSaved -= OnDocumentSaved;
+            application.ControlledApplication.DocumentSynchronizedWithCentral -= OnDocumentSynchronized;
+            _autoCommitEvent?.Dispose();
+            return Result.Succeeded;
+        }
+
+        private void OnDocumentSaved(object sender, DocumentSavedEventArgs e)
+        {
+            _autoCommitHandler.Arm(e.Document, "saved");
+            _autoCommitEvent.Raise();
+        }
+
+        private void OnDocumentSynchronized(object sender, DocumentSynchronizedWithCentralEventArgs e)
+        {
+            _autoCommitHandler.Arm(e.Document, "synced");
+            _autoCommitEvent.Raise();
+        }
 
         private static void BuildUI(UIControlledApplication app)
         {

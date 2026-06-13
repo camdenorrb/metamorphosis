@@ -159,6 +159,18 @@ namespace Metamorphosis.Repository
             return File.Exists(path) ? path : null;
         }
 
+        public bool GetAutoCommitEnabled()
+            => string.Equals(GetConfig("auto_commit_enabled"), "true", StringComparison.OrdinalIgnoreCase);
+
+        public void SetAutoCommitEnabled(bool enabled)
+            => SetConfig("auto_commit_enabled", enabled ? "true" : "false");
+
+        public string GetAutoCommitTemplate()
+            => GetConfig("auto_commit_template") ?? "Auto-commit: {DateTime} by {User}";
+
+        public void SetAutoCommitTemplate(string template)
+            => SetConfig("auto_commit_template", template ?? "");
+
         private void SetConfig(string key, string value)
         {
             var cmd = _db.CreateCommand();
