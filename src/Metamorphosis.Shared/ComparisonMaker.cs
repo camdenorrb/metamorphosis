@@ -31,6 +31,7 @@ namespace Metamorphosis
         // TODO: separate categories by dictionary of category, elementid, parameter
         private Dictionary<long, RevitElement> _idValues = new Dictionary<long, RevitElement>();
         private Dictionary<long, RevitElement> _currentElems = new Dictionary<long, RevitElement>();
+        private Dictionary<string, RevitElement> _uniqueIdValues = new Dictionary<string, RevitElement>();
 
 
         #endregion
@@ -81,6 +82,7 @@ namespace Metamorphosis
             var maker = new ComparisonMaker();
             maker._idValues = ReadElementsFromSdb(fromSdbPath);
             maker._currentElems = ReadElementsFromSdb(toSdbPath);
+            maker.buildUniqueIdIndex();
             return maker.compareData();
         }
 
@@ -346,11 +348,17 @@ namespace Metamorphosis
             foreach (var currentPair in _currentElems)
             {
                 var current = currentPair.Value;
+                // UniqueId-primary matching: try UniqueId first, then fall back to ElementId
+                RevitElement previous = null;
+                if (!string.IsNullOrEmpty(current.UniqueId) && _uniqueIdValues.TryGetValue(current.UniqueId, out var byUid))
+                    previous = byUid;
+                else if (_idValues.ContainsKey(currentPair.Key))
+                    previous = _idValues[currentPair.Key];
+
                 // find it from the previous
-                if (_idValues.ContainsKey(currentPair.Key))
+                if (previous != null)
                 {
                     // it exists, so let's compare
-                    var previous = _idValues[currentPair.Key];
 
                     VersionGuidCompareEnum compare = VersionGuidCompareEnum.Unknown;
 #if REVIT2015 || REVIT2016 || REVIT2017 || REVIT2018 || REVIT2019 || REVIT2020
@@ -387,18 +395,22 @@ namespace Metamorphosis
                 }
                 else
                 {
-                    // it has been removed.
+                    // new element (not present in previous snapshot)
                     changes.Add(buildNew(current));
                 }
             }
 
-            // now look for deleted items
+            // now look for deleted items — element in previous but not in current
             foreach (var previousPair in _idValues)
             {
-                if (_currentElems.ContainsKey(previousPair.Key) == false)
+                var prev = previousPair.Value;
+                bool existsInCurrent = (!string.IsNullOrEmpty(prev.UniqueId) && _currentElems.Values
+                        .Any(c => c.UniqueId == prev.UniqueId))
+                    || _currentElems.ContainsKey(previousPair.Key);
+                if (!existsInCurrent)
                 {
-                    if (!AllCategories && (_requestedCategoryNames.Contains(previousPair.Value.Category) == false)) continue; // do not include
-                    changes.Add(buildDeleted(previousPair.Value));
+                    if (!AllCategories && (_requestedCategoryNames.Contains(prev.Category) == false)) continue;
+                    changes.Add(buildDeleted(prev));
                 }
             }
 
@@ -744,6 +756,14 @@ namespace Metamorphosis
             readValues();
             readElements();
             readGeometry();
+            buildUniqueIdIndex();
+        }
+
+        private void buildUniqueIdIndex()
+        {
+            foreach (var kv in _idValues)
+                if (!string.IsNullOrEmpty(kv.Value.UniqueId))
+                    _uniqueIdValues[kv.Value.UniqueId] = kv.Value;
         }
 
         private void readHeader()
