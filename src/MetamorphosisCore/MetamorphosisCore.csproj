@@ -303,7 +303,7 @@
     </When>
   </Choose>
   <ItemGroup>
-    <EmbeddedResource Include="databaseFormat.txt" />
+    <ProjectReference Include="..\Metamorphosis.Shared\Metamorphosis.Shared.csproj" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Images\Compare-16.png" />
@@ -322,8 +322,6 @@
     <EmbeddedResource Include="Images\clear-16.png" />
     <EmbeddedResource Include="Images\clear-32.png" />
     <EmbeddedResource Include="Images\clear-96.png" />
-    <EmbeddedResource Include="DBScript\UpgradeToV1.txt" />
-    <EmbeddedResource Include="DBScript\UpgradeToV1.1.txt" />
     <Content Include="Settings.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

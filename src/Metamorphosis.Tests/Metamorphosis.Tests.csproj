@@ -12,6 +12,7 @@
   <ItemGroup>
     <!-- Build MetamorphosisCore using its default Debug/Release (net8.0-windows, REVIT2026) config -->
     <ProjectReference Include="..\MetamorphosisCore\MetamorphosisCore.csproj" />
+    <ProjectReference Include="..\Metamorphosis.Shared\Metamorphosis.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>
