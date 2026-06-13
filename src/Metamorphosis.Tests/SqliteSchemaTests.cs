@@ -1,5 +1,6 @@
 using Metamorphosis.Utilities;
 using System.Data.SQLite;
+using System.IO;
 using Xunit;
 
 namespace Metamorphosis.Tests;
