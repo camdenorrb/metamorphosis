@@ -84,11 +84,17 @@ namespace Metamorphosis.Git
                 "Metamorphosis.Git.Commands.BranchCommand");
             branch.ToolTip = "Create or switch branches";
 
+            var rollback = new PushButtonData(
+                "GitRollback", "Rollback", asmPath,
+                "Metamorphosis.Git.Commands.RollbackCommand");
+            rollback.ToolTip = "Restore parameter values from a previous commit";
+
             panel.AddItem(commit);
             panel.AddItem(log);
             panel.AddItem(status);
             panel.AddItem(diff);
             panel.AddItem(branch);
+            panel.AddItem(rollback);
 
             panel.AddSlideOut();
 
