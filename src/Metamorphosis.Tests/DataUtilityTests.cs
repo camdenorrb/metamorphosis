@@ -79,7 +79,7 @@ public class DataUtilityTests : IDisposable
         DataUtility.UpgradeFrom(conn, DataUtility.CurrentVersion, null);
 
         string? ver = new SQLiteCommand(
-            "SELECT value FROM _objects_header WHERE keyword='SchemaVersion'", conn)
+            "SELECT CAST(value AS TEXT) FROM _objects_header WHERE keyword='SchemaVersion'", conn)
             .ExecuteScalar()?.ToString();
 
         Assert.Equal(DataUtility.CurrentVersion.ToString(), ver);
@@ -116,7 +116,7 @@ public class DataUtilityTests : IDisposable
         Assert.Equal("_objects_header", tableExists?.ToString());
 
         string? version = new SQLiteCommand(
-            "SELECT value FROM _objects_header WHERE keyword='SchemaVersion'", conn)
+            "SELECT CAST(value AS TEXT) FROM _objects_header WHERE keyword='SchemaVersion'", conn)
             .ExecuteScalar()?.ToString();
         Assert.Equal("1.1", version);
 

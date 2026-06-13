@@ -81,7 +81,7 @@ public class SqliteSchemaTests : IDisposable
         ins.ExecuteNonQuery();
 
         var sel = conn.CreateCommand();
-        sel.CommandText = "SELECT value FROM _objects_header WHERE keyword=@k";
+        sel.CommandText = "SELECT CAST(value AS TEXT) FROM _objects_header WHERE keyword=@k";
         sel.Parameters.AddWithValue("@k", "SchemaVersion");
         Assert.Equal("1.1", sel.ExecuteScalar()?.ToString());
     }
@@ -98,7 +98,7 @@ public class SqliteSchemaTests : IDisposable
         ins.ExecuteNonQuery();
 
         var sel = conn.CreateCommand();
-        sel.CommandText = "SELECT value FROM _objects_val WHERE id=1";
+        sel.CommandText = "SELECT CAST(value AS TEXT) FROM _objects_val WHERE id=1";
         Assert.Equal("200 mm", sel.ExecuteScalar()?.ToString());
     }
 
@@ -227,7 +227,7 @@ public class SqliteSchemaTests : IDisposable
 
         // The value must be stored as-is, NOT executed as SQL.
         var sel = conn.CreateCommand();
-        sel.CommandText = "SELECT value FROM _objects_header WHERE keyword='test'";
+        sel.CommandText = "SELECT CAST(value AS TEXT) FROM _objects_header WHERE keyword='test'";
         Assert.Equal(payload, sel.ExecuteScalar()?.ToString());
 
         // The table must still exist.
