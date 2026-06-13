@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
+using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.IO;
+using System.Security.Cryptography;
 
 namespace Metamorphosis.Utilities
 {
@@ -64,6 +65,14 @@ namespace Metamorphosis.Utilities
 
                 if (log != null) log("=> Completed update: " + script.Key);
             }
+        }
+
+        internal static string ComputeFileHash(string filePath)
+        {
+            using var sha256 = SHA256.Create();
+            using var stream = File.OpenRead(filePath);
+            byte[] bytes = sha256.ComputeHash(stream);
+            return BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant();
         }
 
         internal static string[] ReadSQLScript(string name)

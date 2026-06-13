@@ -103,6 +103,9 @@
     <EmbeddedResource Include="DBScript\UpgradeToV1.1.txt">
       <LogicalName>MetamorphosisCore.DBScript.UpgradeToV1.1.txt</LogicalName>
     </EmbeddedResource>
+    <EmbeddedResource Include="DBScript\RepositoryV1.sql">
+      <LogicalName>MetamorphosisCore.DBScript.RepositoryV1.sql</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
   <!-- System.Net.Http is not auto-referenced in SDK-style net48 projects -->
