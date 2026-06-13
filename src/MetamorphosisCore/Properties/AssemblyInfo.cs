@@ -7,8 +7,7 @@ using System.Runtime.InteropServices;
 #if NET5_0_OR_GREATER
 // this is a Windows-only Revit addin; GenerateAssemblyInfo is off, so declare the platform here.
 // SupportedOSPlatform only exists in .NET 5+; net48 (Revit 2024) is implicitly Windows-only.
-using System.Runtime.Versioning;
-[assembly: SupportedOSPlatform("windows7.0")]
+[assembly: System.Runtime.Versioning.SupportedOSPlatform("windows7.0")]
 #endif
 
 // Setting ComVisible to false makes the types in this assembly not visible 
