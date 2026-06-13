@@ -1,6 +1,6 @@
 using System;
 using System.Windows.Forms;
-using Repository = Metamorphosis.Repository.Repository;
+using Repo = Metamorphosis.Repository.Repository;
 
 namespace Metamorphosis.Git.UI
 {
@@ -8,9 +8,9 @@ namespace Metamorphosis.Git.UI
     {
         private CheckBox _autoCommitCheck;
         private TextBox _templateBox;
-        private readonly Repository _repo;
+        private readonly Repo _repo;
 
-        internal SettingsForm(Repository repo)
+        internal SettingsForm(Repo repo)
         {
             _repo = repo;
             Text = "Metamorphosis Git — Settings";

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using Metamorphosis.Objects;
-using Repository = Metamorphosis.Repository.Repository;
+using Repo = Metamorphosis.Repository.Repository;
 
 namespace Metamorphosis.Git.UI
 {
@@ -12,9 +12,9 @@ namespace Metamorphosis.Git.UI
         private Button _newBtn;
         private Button _switchBtn;
         private Label _currentLabel;
-        private readonly Repository _repo;
+        private readonly Repo _repo;
 
-        internal BranchForm(Repository repo)
+        internal BranchForm(Repo repo)
         {
             _repo = repo;
             Text = "Metamorphosis Git — Branches";

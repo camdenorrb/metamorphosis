@@ -1,9 +1,9 @@
 using Metamorphosis.Objects;
 using Metamorphosis.Repository;
-using Repository = Metamorphosis.Repository.Repository;
 using Metamorphosis.Utilities;
 using System.IO;
 using Xunit;
+using Repo = Metamorphosis.Repository.Repository;
 
 namespace Metamorphosis.Tests;
 
@@ -41,7 +41,7 @@ public class RepositoryTests : IDisposable
         string modelDir = CreateTempDir();
         string modelPath = Path.Combine(modelDir, "Test.rvt");
 
-        using var repo = Repository.OpenOrCreate(modelPath);
+        using var repo = Repo.OpenOrCreate(modelPath);
 
         Assert.True(Directory.Exists(Path.Combine(modelDir, ".metamorphosis")));
         Assert.True(Directory.Exists(Path.Combine(modelDir, ".metamorphosis", "commits")));
@@ -54,9 +54,9 @@ public class RepositoryTests : IDisposable
         string modelDir = CreateTempDir();
         string modelPath = Path.Combine(modelDir, "Test.rvt");
 
-        using (Repository.OpenOrCreate(modelPath)) { }
+        using (Repo.OpenOrCreate(modelPath)) { }
         // Second open must not throw or corrupt state.
-        using var repo = Repository.OpenOrCreate(modelPath);
+        using var repo = Repo.OpenOrCreate(modelPath);
         Assert.NotNull(repo);
     }
 
@@ -68,7 +68,7 @@ public class RepositoryTests : IDisposable
         string modelDir = CreateTempDir();
         string snapshot = CreateFakeSnapshot(modelDir);
 
-        using var repo = Repository.OpenOrCreate(Path.Combine(modelDir, "Test.rvt"));
+        using var repo = Repo.OpenOrCreate(Path.Combine(modelDir, "Test.rvt"));
         CommitInfo c = repo.Commit(snapshot, "Initial commit", "Tester");
 
         Assert.Equal(1L, c.Id);
@@ -88,7 +88,7 @@ public class RepositoryTests : IDisposable
         string modelDir = CreateTempDir();
         string snapshot = CreateFakeSnapshot(modelDir);
 
-        using var repo = Repository.OpenOrCreate(Path.Combine(modelDir, "Test.rvt"));
+        using var repo = Repo.OpenOrCreate(Path.Combine(modelDir, "Test.rvt"));
         CommitInfo c1 = repo.Commit(snapshot, "first", "A");
         CommitInfo c2 = repo.Commit(snapshot, "second", "B");
 
@@ -102,7 +102,7 @@ public class RepositoryTests : IDisposable
     public void GetHead_ReturnsNullOnEmptyRepo()
     {
         string modelDir = CreateTempDir();
-        using var repo = Repository.OpenOrCreate(Path.Combine(modelDir, "Test.rvt"));
+        using var repo = Repo.OpenOrCreate(Path.Combine(modelDir, "Test.rvt"));
         Assert.Null(repo.GetHead());
     }
 
@@ -112,7 +112,7 @@ public class RepositoryTests : IDisposable
         string modelDir = CreateTempDir();
         string snapshot = CreateFakeSnapshot(modelDir);
 
-        using var repo = Repository.OpenOrCreate(Path.Combine(modelDir, "Test.rvt"));
+        using var repo = Repo.OpenOrCreate(Path.Combine(modelDir, "Test.rvt"));
         CommitInfo c1 = repo.Commit(snapshot, "first", "A");
         CommitInfo c2 = repo.Commit(snapshot, "second", "B");
 
@@ -130,7 +130,7 @@ public class RepositoryTests : IDisposable
         string modelDir = CreateTempDir();
         string snapshot = CreateFakeSnapshot(modelDir);
 
-        using var repo = Repository.OpenOrCreate(Path.Combine(modelDir, "Test.rvt"));
+        using var repo = Repo.OpenOrCreate(Path.Combine(modelDir, "Test.rvt"));
         repo.Commit(snapshot, "first", "A");
         repo.Commit(snapshot, "second", "B");
         repo.Commit(snapshot, "third", "C");
@@ -145,7 +145,7 @@ public class RepositoryTests : IDisposable
     public void GetLog_EmptyRepoReturnsEmptyList()
     {
         string modelDir = CreateTempDir();
-        using var repo = Repository.OpenOrCreate(Path.Combine(modelDir, "Test.rvt"));
+        using var repo = Repo.OpenOrCreate(Path.Combine(modelDir, "Test.rvt"));
         Assert.Empty(repo.GetLog());
     }
 
@@ -155,7 +155,7 @@ public class RepositoryTests : IDisposable
     public void NewRepo_HasMainBranchByDefault()
     {
         string modelDir = CreateTempDir();
-        using var repo = Repository.OpenOrCreate(Path.Combine(modelDir, "Test.rvt"));
+        using var repo = Repo.OpenOrCreate(Path.Combine(modelDir, "Test.rvt"));
         Assert.Equal("main", repo.CurrentBranch);
         Assert.Single(repo.GetBranches());
         Assert.Equal("main", repo.GetBranches()[0].Name);
@@ -167,7 +167,7 @@ public class RepositoryTests : IDisposable
         string modelDir = CreateTempDir();
         string snapshot = CreateFakeSnapshot(modelDir);
 
-        using var repo = Repository.OpenOrCreate(Path.Combine(modelDir, "Test.rvt"));
+        using var repo = Repo.OpenOrCreate(Path.Combine(modelDir, "Test.rvt"));
         repo.Commit(snapshot, "base", "A");
         repo.CreateBranch("feature");
         repo.CheckoutBranch("feature");
@@ -183,7 +183,7 @@ public class RepositoryTests : IDisposable
     public void CheckoutBranch_NonExistent_Throws()
     {
         string modelDir = CreateTempDir();
-        using var repo = Repository.OpenOrCreate(Path.Combine(modelDir, "Test.rvt"));
+        using var repo = Repo.OpenOrCreate(Path.Combine(modelDir, "Test.rvt"));
         Assert.Throws<InvalidOperationException>(() => repo.CheckoutBranch("ghost"));
     }
 
@@ -193,7 +193,7 @@ public class RepositoryTests : IDisposable
         string modelDir = CreateTempDir();
         string snapshot = CreateFakeSnapshot(modelDir);
 
-        using var repo = Repository.OpenOrCreate(Path.Combine(modelDir, "Test.rvt"));
+        using var repo = Repo.OpenOrCreate(Path.Combine(modelDir, "Test.rvt"));
         repo.Commit(snapshot, "main-commit", "A");
         repo.CreateBranch("feature");
         repo.CheckoutBranch("feature");
@@ -216,7 +216,7 @@ public class RepositoryTests : IDisposable
         string modelDir = CreateTempDir();
         string snapshot = CreateFakeSnapshot(modelDir);
 
-        using var repo = Repository.OpenOrCreate(Path.Combine(modelDir, "Test.rvt"));
+        using var repo = Repo.OpenOrCreate(Path.Combine(modelDir, "Test.rvt"));
         CommitInfo c = repo.Commit(snapshot, "msg", "A");
 
         string? path = repo.GetSnapshotPath(c.Id);
@@ -228,7 +228,7 @@ public class RepositoryTests : IDisposable
     public void GetSnapshotPath_UnknownId_ReturnsNull()
     {
         string modelDir = CreateTempDir();
-        using var repo = Repository.OpenOrCreate(Path.Combine(modelDir, "Test.rvt"));
+        using var repo = Repo.OpenOrCreate(Path.Combine(modelDir, "Test.rvt"));
         Assert.Null(repo.GetSnapshotPath(9999));
     }
 
