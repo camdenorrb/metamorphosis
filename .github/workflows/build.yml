@@ -41,6 +41,9 @@ jobs:
       - name: Build MetamorphosisCore (Revit ${{ matrix.revit }})
         run: dotnet build src/MetamorphosisCore/MetamorphosisCore.csproj -c ${{ matrix.config }}
 
+      - name: Build Metamorphosis.Git (Revit ${{ matrix.revit }})
+        run: dotnet build src/Metamorphosis.Git/Metamorphosis.Git.csproj -c ${{ matrix.config }}
+
       - name: Stage addin layout
         shell: pwsh
         run: |
