@@ -172,8 +172,9 @@
 			<Component Id="Settings2024.xml" Guid="{EAD42FD5-720D-4EAE-871E-C7D10D502024}" DiskId="1">
 				<File Id="Settings2024" Name="Settings.xml" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2024\net48\Settings.xml" Checksum="no"/>
 			</Component>
+			<!-- System.Data.SQLite.Core on net48 places the native interop DLL in x64\ via its legacy MSBuild targets -->
 			<Component Id="SQLiteInterop2024" Guid="{ED743C72-6984-4009-B440-2763207A2024}" DiskId="1">
-				<File Id="SQLiteInterop2024" Name="SQLite.Interop.dll" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2024\net48\SQLite.Interop.dll" Checksum="no"/>
+				<File Id="SQLiteInterop2024" Name="SQLite.Interop.dll" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2024\net48\x64\SQLite.Interop.dll" Checksum="no"/>
 			</Component>
 			<Component Id="EFDLL2024" Guid="{EC713C72-6984-4009-B440-2763207A2024}" DiskId="1">
 				<File Id="EFDLL2024" Name="EntityFramework.dll" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2024\net48\EntityFramework.dll" Checksum="no"/>

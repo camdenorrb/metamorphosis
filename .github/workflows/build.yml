@@ -47,10 +47,13 @@ jobs:
           $out = "src/MetamorphosisCore/bin/Release${{ matrix.revit }}/${{ matrix.tfm }}"
           New-Item -ItemType Directory -Path "artifact/Metamorphosis" -Force | Out-Null
           Copy-Item "$out/*" "artifact/Metamorphosis" -Recurse
-          # net8.0-windows: SQLite.Interop.dll lands in runtimes/win-x64/native/ and must be
-          # copied flat so Revit's addin loader can find it. net48: already flat in $out.
+          # Ensure SQLite.Interop.dll is flat next to System.Data.SQLite.dll so Revit's
+          # addin loader can find it. net8.0-windows puts it in runtimes/win-x64/native/;
+          # net48 (legacy MSBuild targets) puts it in x64\.
           $interop = "$out/runtimes/win-x64/native/SQLite.Interop.dll"
           if (Test-Path $interop) { Copy-Item $interop "artifact/Metamorphosis/" }
+          $interop64 = "$out/x64/SQLite.Interop.dll"
+          if (Test-Path $interop64) { Copy-Item $interop64 "artifact/Metamorphosis/" }
           Copy-Item "src/MetaInstaller/MetamorphosisCore.addin" "artifact/"
 
       - name: Upload addin artifact
