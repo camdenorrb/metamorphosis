@@ -22,6 +22,12 @@
 			<ComponentRef Id="EFDLL2026"/>
 			<ComponentRef Id="EFSQLDLL2026"/>
 			<ComponentRef Id="Settings2026.xml"/>
+			<ComponentRef Id="GitAddin2026"/>
+			<ComponentRef Id="GitDLL2026"/>
+			<ComponentRef Id="GitSharedDLL2026"/>
+			<ComponentRef Id="GitSQLite2026"/>
+			<ComponentRef Id="GitSQLiteInterop2026"/>
+			<ComponentRef Id="GitNewtonSoft2026"/>
 		</Feature>
 		<Feature Id="Revit2025Install" Title="Revit 2025" Level="1">
 			<ComponentRef Id="Addin2025" />
@@ -32,6 +38,12 @@
 			<ComponentRef Id="EFDLL2025"/>
 			<ComponentRef Id="EFSQLDLL2025"/>
 			<ComponentRef Id="Settings2025.xml"/>
+			<ComponentRef Id="GitAddin2025"/>
+			<ComponentRef Id="GitDLL2025"/>
+			<ComponentRef Id="GitSharedDLL2025"/>
+			<ComponentRef Id="GitSQLite2025"/>
+			<ComponentRef Id="GitSQLiteInterop2025"/>
+			<ComponentRef Id="GitNewtonSoft2025"/>
 		</Feature>
 		<Feature Id="Revit2024Install" Title="Revit 2024" Level="1">
 			<ComponentRef Id="Addin2024" />
@@ -42,6 +54,12 @@
 			<ComponentRef Id="EFDLL2024"/>
 			<ComponentRef Id="EFSQLDLL2024"/>
 			<ComponentRef Id="Settings2024.xml"/>
+			<ComponentRef Id="GitAddin2024"/>
+			<ComponentRef Id="GitDLL2024"/>
+			<ComponentRef Id="GitSharedDLL2024"/>
+			<ComponentRef Id="GitSQLite2024"/>
+			<ComponentRef Id="GitSQLiteInterop2024"/>
+			<ComponentRef Id="GitNewtonSoft2024"/>
 		</Feature>
 	</Product>
 
@@ -56,13 +74,19 @@
 							<Directory Id="ADDINS2026" Name="2026">
 								<Directory Id="BUNDLEFOLDER2026" Name="Metamorphosis">
 								</Directory>
+								<Directory Id="GITFOLDER2026" Name="MetamorphosisGit">
+								</Directory>
 							</Directory>
 							<Directory Id="ADDINS2025" Name="2025">
 								<Directory Id="BUNDLEFOLDER2025" Name="Metamorphosis">
 								</Directory>
+								<Directory Id="GITFOLDER2025" Name="MetamorphosisGit">
+								</Directory>
 							</Directory>
 							<Directory Id="ADDINS2024" Name="2024">
 								<Directory Id="BUNDLEFOLDER2024" Name="Metamorphosis">
+								</Directory>
+								<Directory Id="GITFOLDER2024" Name="MetamorphosisGit">
 								</Directory>
 							</Directory>
 
@@ -181,6 +205,84 @@
 			</Component>
 			<Component Id="EFSQLDLL2024" Guid="{EC71AC72-6984-4009-B440-2763207A2024}" DiskId="1">
 				<File Id="EFSQLDLL2024" Name="EntityFramework.SqlServer.dll" Source="$(var.ProjectDir)\..\MetamorphosisCore\bin\Release2024\net48\EntityFramework.SqlServer.dll" Checksum="no"/>
+			</Component>
+		</DirectoryRef>
+
+		<!-- ── Metamorphosis.Git addin (2026) ────────────────────────────── -->
+		<DirectoryRef Id="ADDINS2026">
+			<Component Id="GitAddin2026" Guid="{239560AA-5363-4323-8CAB-DCF7D063B3BE}" DiskId="1">
+				<File Id="MetamorphosisGit.addin2026" Name="MetamorphosisGit.addin" Source="$(var.ProjectDir)MetamorphosisGit.addin" Checksum="no"/>
+			</Component>
+		</DirectoryRef>
+		<DirectoryRef Id="GITFOLDER2026">
+			<Component Id="GitDLL2026" Guid="{F48E3E3B-6E12-4763-BA60-7D4818F69F8C}" DiskId="1">
+				<CreateFolder/>
+				<RemoveFolder Id="RemoveGit2026" On="uninstall"/>
+				<File Id="Metamorphosis.Git.dll2026" Name="Metamorphosis.Git.dll" Source="$(var.ProjectDir)\..\Metamorphosis.Git\bin\Release2026\net8.0-windows\Metamorphosis.Git.dll" Checksum="no"/>
+			</Component>
+			<Component Id="GitSharedDLL2026" Guid="{EDFC6A44-1E4D-482D-9DD9-D11E9B85FEDF}" DiskId="1">
+				<File Id="MetamorphosisShared.dll2026" Name="MetamorphosisShared.dll" Source="$(var.ProjectDir)\..\Metamorphosis.Git\bin\Release2026\net8.0-windows\MetamorphosisShared.dll" Checksum="no"/>
+			</Component>
+			<Component Id="GitSQLite2026" Guid="{FCD8369C-8275-45B8-8E14-962EF279D5B7}" DiskId="1">
+				<File Id="GitSQLite2026file" Name="System.Data.SQLite.dll" Source="$(var.ProjectDir)\..\Metamorphosis.Git\bin\Release2026\net8.0-windows\System.Data.SQLite.dll" Checksum="no"/>
+			</Component>
+			<Component Id="GitSQLiteInterop2026" Guid="{9A536218-F348-4BD0-9748-D587A106AA33}" DiskId="1">
+				<File Id="GitSQLiteInterop2026file" Name="SQLite.Interop.dll" Source="$(var.ProjectDir)\..\Metamorphosis.Git\bin\Release2026\net8.0-windows\runtimes\win-x64\native\SQLite.Interop.dll" Checksum="no"/>
+			</Component>
+			<Component Id="GitNewtonSoft2026" Guid="{38762E5E-795A-46E3-B288-D6363B27AD9C}" DiskId="1">
+				<File Id="GitNewtonSoft2026file" Name="Newtonsoft.Json.dll" Source="$(var.ProjectDir)\..\Metamorphosis.Git\bin\Release2026\net8.0-windows\Newtonsoft.Json.dll" Checksum="no"/>
+			</Component>
+		</DirectoryRef>
+
+		<!-- ── Metamorphosis.Git addin (2025) ────────────────────────────── -->
+		<DirectoryRef Id="ADDINS2025">
+			<Component Id="GitAddin2025" Guid="{AECE28F3-E91C-4371-BA40-5C705289FF04}" DiskId="1">
+				<File Id="MetamorphosisGit.addin2025" Name="MetamorphosisGit.addin" Source="$(var.ProjectDir)MetamorphosisGit.addin" Checksum="no"/>
+			</Component>
+		</DirectoryRef>
+		<DirectoryRef Id="GITFOLDER2025">
+			<Component Id="GitDLL2025" Guid="{8A2391F1-9EB2-497A-BD11-D579ABE843AC}" DiskId="1">
+				<CreateFolder/>
+				<RemoveFolder Id="RemoveGit2025" On="uninstall"/>
+				<File Id="Metamorphosis.Git.dll2025" Name="Metamorphosis.Git.dll" Source="$(var.ProjectDir)\..\Metamorphosis.Git\bin\Release2025\net8.0-windows\Metamorphosis.Git.dll" Checksum="no"/>
+			</Component>
+			<Component Id="GitSharedDLL2025" Guid="{A070A9A3-5B86-47C0-83B3-C7731E704D79}" DiskId="1">
+				<File Id="MetamorphosisShared.dll2025" Name="MetamorphosisShared.dll" Source="$(var.ProjectDir)\..\Metamorphosis.Git\bin\Release2025\net8.0-windows\MetamorphosisShared.dll" Checksum="no"/>
+			</Component>
+			<Component Id="GitSQLite2025" Guid="{6A015072-DEB0-46DC-BDAC-89EBF10705A3}" DiskId="1">
+				<File Id="GitSQLite2025file" Name="System.Data.SQLite.dll" Source="$(var.ProjectDir)\..\Metamorphosis.Git\bin\Release2025\net8.0-windows\System.Data.SQLite.dll" Checksum="no"/>
+			</Component>
+			<Component Id="GitSQLiteInterop2025" Guid="{776362BC-11E1-4D58-A6EB-90E9296AE614}" DiskId="1">
+				<File Id="GitSQLiteInterop2025file" Name="SQLite.Interop.dll" Source="$(var.ProjectDir)\..\Metamorphosis.Git\bin\Release2025\net8.0-windows\runtimes\win-x64\native\SQLite.Interop.dll" Checksum="no"/>
+			</Component>
+			<Component Id="GitNewtonSoft2025" Guid="{1EEC6953-DADF-42B3-B495-1C6C4FB3FFFE}" DiskId="1">
+				<File Id="GitNewtonSoft2025file" Name="Newtonsoft.Json.dll" Source="$(var.ProjectDir)\..\Metamorphosis.Git\bin\Release2025\net8.0-windows\Newtonsoft.Json.dll" Checksum="no"/>
+			</Component>
+		</DirectoryRef>
+
+		<!-- ── Metamorphosis.Git addin (2024 / net48) ────────────────────── -->
+		<DirectoryRef Id="ADDINS2024">
+			<Component Id="GitAddin2024" Guid="{15987AD8-81DD-435C-BA34-ED1F619B078E}" DiskId="1">
+				<File Id="MetamorphosisGit.addin2024" Name="MetamorphosisGit.addin" Source="$(var.ProjectDir)MetamorphosisGit.addin" Checksum="no"/>
+			</Component>
+		</DirectoryRef>
+		<DirectoryRef Id="GITFOLDER2024">
+			<Component Id="GitDLL2024" Guid="{017B7486-4D34-4931-869E-78BB9AF42703}" DiskId="1">
+				<CreateFolder/>
+				<RemoveFolder Id="RemoveGit2024" On="uninstall"/>
+				<File Id="Metamorphosis.Git.dll2024" Name="Metamorphosis.Git.dll" Source="$(var.ProjectDir)\..\Metamorphosis.Git\bin\Release2024\net48\Metamorphosis.Git.dll" Checksum="no"/>
+			</Component>
+			<Component Id="GitSharedDLL2024" Guid="{E6BD6348-DAAD-4AD3-B805-F2D6883C24B7}" DiskId="1">
+				<File Id="MetamorphosisShared.dll2024" Name="MetamorphosisShared.dll" Source="$(var.ProjectDir)\..\Metamorphosis.Git\bin\Release2024\net48\MetamorphosisShared.dll" Checksum="no"/>
+			</Component>
+			<Component Id="GitSQLite2024" Guid="{B70BDF60-EEA6-47B3-B56C-2F18E4181B25}" DiskId="1">
+				<File Id="GitSQLite2024file" Name="System.Data.SQLite.dll" Source="$(var.ProjectDir)\..\Metamorphosis.Git\bin\Release2024\net48\System.Data.SQLite.dll" Checksum="no"/>
+			</Component>
+			<Component Id="GitSQLiteInterop2024" Guid="{1FF50036-F3C9-478F-A884-5DDCB360C494}" DiskId="1">
+				<File Id="GitSQLiteInterop2024file" Name="SQLite.Interop.dll" Source="$(var.ProjectDir)\..\Metamorphosis.Git\bin\Release2024\net48\x64\SQLite.Interop.dll" Checksum="no"/>
+			</Component>
+			<Component Id="GitNewtonSoft2024" Guid="{FE2EE3CA-F13E-4960-8453-4BC2F08B6A80}" DiskId="1">
+				<File Id="GitNewtonSoft2024file" Name="Newtonsoft.Json.dll" Source="$(var.ProjectDir)\..\Metamorphosis.Git\bin\Release2024\net48\Newtonsoft.Json.dll" Checksum="no"/>
 			</Component>
 		</DirectoryRef>
 

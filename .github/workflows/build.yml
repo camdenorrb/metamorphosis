@@ -108,6 +108,15 @@ jobs:
       - name: Build MetamorphosisCore (Revit 2024)
         run: dotnet build src/MetamorphosisCore/MetamorphosisCore.csproj -c Release2024
 
+      - name: Build Metamorphosis.Git (Revit 2026)
+        run: dotnet build src/Metamorphosis.Git/Metamorphosis.Git.csproj -c Release
+
+      - name: Build Metamorphosis.Git (Revit 2025)
+        run: dotnet build src/Metamorphosis.Git/Metamorphosis.Git.csproj -c Release2025
+
+      - name: Build Metamorphosis.Git (Revit 2024)
+        run: dotnet build src/Metamorphosis.Git/Metamorphosis.Git.csproj -c Release2024
+
       - name: Install WiX Toolset 3.14
         run: choco install wixtoolset -y --no-progress
 
