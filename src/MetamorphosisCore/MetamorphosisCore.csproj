@@ -24,6 +24,7 @@
     <DefineConstants>TRACE;REVIT2026;LONGELEMENTIDS</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release2024|AnyCPU'">
+    <TargetFramework>net48</TargetFramework>
     <OutputPath>bin\Release2024\</OutputPath>
     <DefineConstants>TRACE;REVIT2024;LONGELEMENTIDS</DefineConstants>
   </PropertyGroup>
@@ -171,6 +172,27 @@
 			  </PackageReference>
 		  </ItemGroup>
 	  </When>
+    <When Condition="'$(Configuration)' == 'Debug2024' Or '$(Configuration)' == 'Release2024'">
+      <ItemGroup Condition="Exists('C:\Program Files\Autodesk\Revit 2024\RevitAPI.dll')">
+        <Reference Include="RevitAPI">
+          <HintPath>C:\Program Files\Autodesk\Revit 2024\RevitAPI.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="RevitAPIUI">
+          <HintPath>C:\Program Files\Autodesk\Revit 2024\RevitAPIUI.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+      </ItemGroup>
+      <!-- CI fallback: reference-only Revit API packages when Revit is not installed (e.g. GitHub Actions) -->
+      <ItemGroup Condition="!Exists('C:\Program Files\Autodesk\Revit 2024\RevitAPI.dll')">
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="2024.3.40">
+          <ExcludeAssets>runtime</ExcludeAssets>
+        </PackageReference>
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="2024.3.40">
+          <ExcludeAssets>runtime</ExcludeAssets>
+        </PackageReference>
+      </ItemGroup>
+    </When>
     <When Condition="'$(Configuration)' == 'Debug2023' Or '$(Configuration)' == 'Release2023'">
       <ItemGroup>
         <Reference Include="RevitAPI">
