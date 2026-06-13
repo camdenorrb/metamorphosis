@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using Metamorphosis.Objects;
-using Metamorphosis.Repository;
+using Repository = Metamorphosis.Repository.Repository;
 
 namespace Metamorphosis.Git.UI
 {

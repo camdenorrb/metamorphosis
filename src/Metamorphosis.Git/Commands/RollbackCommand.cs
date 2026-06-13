@@ -7,7 +7,6 @@ using System.Windows.Forms;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using Metamorphosis.Objects;
 using Metamorphosis.Repository;
 
 namespace Metamorphosis.Git.Commands
@@ -23,7 +22,7 @@ namespace Metamorphosis.Git.Commands
                 UIApplication uiApp = commandData.Application;
 
                 using var repo = Repository.Repository.OpenOrCreate(doc.PathName);
-                IList<CommitInfo> log = repo.GetLog();
+                IList<Metamorphosis.Objects.CommitInfo> log = repo.GetLog();
 
                 if (log.Count == 0)
                 {
@@ -31,7 +30,7 @@ namespace Metamorphosis.Git.Commands
                     return Result.Succeeded;
                 }
 
-                CommitInfo target = PickCommit(log);
+                Metamorphosis.Objects.CommitInfo target = PickCommit(log);
                 if (target == null) return Result.Cancelled;
 
                 string snapshotPath = repo.GetSnapshotPath(target.Id);
@@ -100,7 +99,7 @@ namespace Metamorphosis.Git.Commands
             }
         }
 
-        private static CommitInfo PickCommit(IList<CommitInfo> commits)
+        private static Metamorphosis.Objects.CommitInfo PickCommit(IList<Metamorphosis.Objects.CommitInfo> commits)
         {
             using var dlg = new Form();
             dlg.Text = "Metamorphosis Git — Select Commit to Roll Back To";

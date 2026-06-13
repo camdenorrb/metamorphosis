@@ -1,5 +1,6 @@
 using Metamorphosis.Objects;
 using Metamorphosis.Repository;
+using Repository = Metamorphosis.Repository.Repository;
 using Metamorphosis.Utilities;
 using System.IO;
 using Xunit;

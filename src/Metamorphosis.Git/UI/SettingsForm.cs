@@ -1,6 +1,6 @@
 using System;
 using System.Windows.Forms;
-using Metamorphosis.Repository;
+using Repository = Metamorphosis.Repository.Repository;
 
 namespace Metamorphosis.Git.UI
 {
