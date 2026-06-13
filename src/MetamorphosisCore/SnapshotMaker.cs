@@ -19,6 +19,9 @@ namespace Metamorphosis
         private Dictionary<string, int> _valueDict = new Dictionary<string, int>();
         // cache GetParameters results so each element is queried exactly once
         private Dictionary<long, IList<Parameter>> _elemParamCache = new Dictionary<long, IList<Parameter>>();
+        // cache AsValueString results per (paramId, rawValue) — avoids re-entering Revit's
+        // formatting pipeline for parameters where many elements share the same raw value
+        private Dictionary<long, Dictionary<long, string>> _paramValueCache = new Dictionary<long, Dictionary<long, string>>();
         private Dictionary<string, string> _headerDict = new Dictionary<string, string>();
         private string _filename;
         private string _dbFilename;
@@ -174,6 +177,41 @@ namespace Metamorphosis
             log((DateTime.Now - start) + ": Geometry Table Updated for Types");
             Duration = DateTime.Now - start;
             log("Total Time: " + Duration.TotalMinutes + " minutes");
+        }
+
+        // Returns the display string for a parameter value.
+        // For non-string types the raw value (int/double/elementId) is used as a cache key
+        // so AsValueString() — which crosses the managed/native boundary and runs Revit's
+        // full unit-conversion and localization pipeline — is called at most once per
+        // unique raw value per parameter instead of once per element.
+        private string GetOrFormatParameterValue(Parameter p)
+        {
+            if (p.StorageType == StorageType.String) return p.AsString();
+
+            long rawKey;
+            switch (p.StorageType)
+            {
+                case StorageType.Integer:
+                    rawKey = p.AsInteger();
+                    break;
+                case StorageType.Double:
+                    rawKey = BitConverter.DoubleToInt64Bits(p.AsDouble());
+                    break;
+                case StorageType.ElementId:
+                    rawKey = p.AsElementId().AsLong();
+                    break;
+                default:
+                    return p.AsValueString();
+            }
+
+            long paramId = p.Id.AsLong();
+            if (!_paramValueCache.TryGetValue(paramId, out var inner))
+                _paramValueCache[paramId] = inner = new Dictionary<long, string>();
+
+            if (!inner.TryGetValue(rawKey, out string formatted))
+                inner[rawKey] = formatted = p.AsValueString();
+
+            return formatted;
         }
 
         // Speed up bulk inserts into a freshly-created file. The snapshot is always
@@ -382,7 +420,7 @@ namespace Metamorphosis
                             {
                                 if (p.Definition == null) continue;
 
-                                string val = p.StorageType == StorageType.String ? p.AsString() : p.AsValueString();
+                                string val = GetOrFormatParameterValue(p);
                                 if (val == null) val = "(n/a)";
 
                                 if (!_valueDict.ContainsKey(val))

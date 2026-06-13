@@ -18,6 +18,7 @@ namespace Metamorphosis
         private Dictionary<long, Parameter> _paramDict = new Dictionary<long, Parameter>();
         private Dictionary<string, int> _valueDict = new Dictionary<string, int>();
         private Dictionary<long, IList<Parameter>> _elemParamCache = new Dictionary<long, IList<Parameter>>();
+        private Dictionary<long, Dictionary<long, string>> _paramValueCache = new Dictionary<long, Dictionary<long, string>>();
         private Dictionary<string, string> _headerDict = new Dictionary<string, string>();
         private string _filename;
         private string _dbFilename;
@@ -185,6 +186,36 @@ namespace Metamorphosis
                 new SQLiteCommand(pragma, conn).ExecuteNonQuery();
         }
 
+        private string GetOrFormatParameterValue(Parameter p)
+        {
+            if (p.StorageType == StorageType.String) return p.AsString();
+
+            long rawKey;
+            switch (p.StorageType)
+            {
+                case StorageType.Integer:
+                    rawKey = p.AsInteger();
+                    break;
+                case StorageType.Double:
+                    rawKey = BitConverter.DoubleToInt64Bits(p.AsDouble());
+                    break;
+                case StorageType.ElementId:
+                    rawKey = p.AsElementId().AsLong();
+                    break;
+                default:
+                    return p.AsValueString();
+            }
+
+            long paramId = p.Id.AsLong();
+            if (!_paramValueCache.TryGetValue(paramId, out var inner))
+                _paramValueCache[paramId] = inner = new Dictionary<long, string>();
+
+            if (!inner.TryGetValue(rawKey, out string formatted))
+                inner[rawKey] = formatted = p.AsValueString();
+
+            return formatted;
+        }
+
         private void log(string msg)
         {
             _doc.Application.WriteJournalComment(msg, false);
@@ -260,8 +291,6 @@ namespace Metamorphosis
                             cmd.CommandText = "INSERT INTO _objects_header (keyword,value) VALUES(@keyword,@value)";
                             cmd.Parameters.AddWithValue("@keyword", pair.Key);
                             cmd.Parameters.AddWithValue("@value", pair.Value);
-                            currentQuery = cmd.CommandText;
-
                             cmd.ExecuteNonQuery();
                         }
 
@@ -378,7 +407,7 @@ namespace Metamorphosis
                             {
                                 if (p.Definition == null) continue;
 
-                                string val = p.StorageType == StorageType.String ? p.AsString() : p.AsValueString();
+                                string val = GetOrFormatParameterValue(p);
                                 if (val == null) val = "(n/a)";
 
                                 if (!_valueDict.ContainsKey(val))
