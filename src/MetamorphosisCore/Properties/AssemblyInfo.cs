@@ -20,3 +20,5 @@ using System.Runtime.InteropServices;
 
 // Make this assembly visible to our friend the Dynamo node!
 [assembly:InternalsVisibleTo("MetamorphosisDynamo")]
+// Allow unit tests to access internal helpers (DataUtility, RevitUtils, etc.)
+[assembly:InternalsVisibleTo("Metamorphosis.Tests")]
