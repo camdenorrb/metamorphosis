@@ -1,0 +1,121 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <OutputType>Library</OutputType>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <AssemblyName>MetamorphosisShared</AssemblyName>
+    <UseWindowsForms>true</UseWindowsForms>
+    <UseWPF>true</UseWPF>
+    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+    <CopyLocalLockFileAssemblies>True</CopyLocalLockFileAssemblies>
+    <Configurations>Debug;Release;Release2025;Release2024</Configurations>
+    <LangVersion>9.0</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;REVIT2026;LONGELEMENTIDS</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>bin\Release2026\</OutputPath>
+    <DefineConstants>TRACE;REVIT2026;LONGELEMENTIDS</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release2024|AnyCPU'">
+    <TargetFramework>net48</TargetFramework>
+    <OutputPath>bin\Release2024\</OutputPath>
+    <DefineConstants>TRACE;REVIT2024;LONGELEMENTIDS</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release2025|AnyCPU'">
+    <OutputPath>bin\Release2025\</OutputPath>
+    <DefineConstants>TRACE;REVIT2025;LONGELEMENTIDS</DefineConstants>
+  </PropertyGroup>
+
+  <Choose>
+    <When Condition="'$(Configuration)' == 'Debug' Or '$(Configuration)' == 'Release'">
+      <ItemGroup Condition="Exists('C:\Program Files\Autodesk\Revit 2026\RevitAPI.dll')">
+        <Reference Include="RevitAPI">
+          <HintPath>C:\Program Files\Autodesk\Revit 2026\RevitAPI.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="RevitAPIUI">
+          <HintPath>C:\Program Files\Autodesk\Revit 2026\RevitAPIUI.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+      </ItemGroup>
+      <ItemGroup Condition="!Exists('C:\Program Files\Autodesk\Revit 2026\RevitAPI.dll')">
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="2026.0.4">
+          <ExcludeAssets>runtime</ExcludeAssets>
+        </PackageReference>
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="2026.0.4">
+          <ExcludeAssets>runtime</ExcludeAssets>
+        </PackageReference>
+      </ItemGroup>
+    </When>
+    <When Condition="'$(Configuration)' == 'Debug2025' Or '$(Configuration)' == 'Release2025'">
+      <ItemGroup Condition="Exists('C:\Program Files\Autodesk\Revit 2025\RevitAPI.dll')">
+        <Reference Include="RevitAPI">
+          <HintPath>C:\Program Files\Autodesk\Revit 2025\RevitAPI.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="RevitAPIUI">
+          <HintPath>C:\Program Files\Autodesk\Revit 2025\RevitAPIUI.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+      </ItemGroup>
+      <ItemGroup Condition="!Exists('C:\Program Files\Autodesk\Revit 2025\RevitAPI.dll')">
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="2025.0.2">
+          <ExcludeAssets>runtime</ExcludeAssets>
+        </PackageReference>
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="2025.0.2">
+          <ExcludeAssets>runtime</ExcludeAssets>
+        </PackageReference>
+      </ItemGroup>
+    </When>
+    <When Condition="'$(Configuration)' == 'Debug2024' Or '$(Configuration)' == 'Release2024'">
+      <ItemGroup Condition="Exists('C:\Program Files\Autodesk\Revit 2024\RevitAPI.dll')">
+        <Reference Include="RevitAPI">
+          <HintPath>C:\Program Files\Autodesk\Revit 2024\RevitAPI.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="RevitAPIUI">
+          <HintPath>C:\Program Files\Autodesk\Revit 2024\RevitAPIUI.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+      </ItemGroup>
+      <ItemGroup Condition="!Exists('C:\Program Files\Autodesk\Revit 2024\RevitAPI.dll')">
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="2024.3.40">
+          <ExcludeAssets>runtime</ExcludeAssets>
+        </PackageReference>
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="2024.3.40">
+          <ExcludeAssets>runtime</ExcludeAssets>
+        </PackageReference>
+      </ItemGroup>
+    </When>
+  </Choose>
+
+  <!-- Embedded resources: use LogicalName to keep the MetamorphosisCore. prefix
+       that DataUtility.ReadSQLScript expects after its fixNameSpace substitution. -->
+  <ItemGroup>
+    <EmbeddedResource Include="databaseFormat.txt">
+      <LogicalName>MetamorphosisCore.databaseFormat.txt</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DBScript\UpgradeToV1.txt">
+      <LogicalName>MetamorphosisCore.DBScript.UpgradeToV1.txt</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DBScript\UpgradeToV1.1.txt">
+      <LogicalName>MetamorphosisCore.DBScript.UpgradeToV1.1.txt</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DBScript\RepositoryV1.sql">
+      <LogicalName>MetamorphosisCore.DBScript.RepositoryV1.sql</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <!-- System.Net.Http is not auto-referenced in SDK-style net48 projects -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+</Project>

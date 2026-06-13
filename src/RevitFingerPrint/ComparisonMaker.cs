@@ -102,7 +102,13 @@ namespace Metamorphosis
         public static ChangeSummary DeSerialize(string filename)
         {
             string content = System.IO.File.ReadAllText(filename);
-            ChangeSummary cs = Newtonsoft.Json.JsonConvert.DeserializeObject<ChangeSummary>(content);
+            // never honor embedded type names, and cap nesting depth, since this file may come from an untrusted source.
+            var settings = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                TypeNameHandling = Newtonsoft.Json.TypeNameHandling.None,
+                MaxDepth = 64
+            };
+            ChangeSummary cs = Newtonsoft.Json.JsonConvert.DeserializeObject<ChangeSummary>(content, settings);
 
             return cs;
         }
@@ -874,7 +880,7 @@ namespace Metamorphosis
 #if REVIT2015 || REVIT2016 || REVIT2017 || REVIT2018 || REVIT2019 || REVIT2020
                 // do nothing here
 #else
-            if (e.VersionGuid != null) revitElem.VersionGuid = e.VersionGuid.ToString();
+            if (e.VersionGuid != Guid.Empty) revitElem.VersionGuid = e.VersionGuid.ToString();
 #endif
 
             if (withParams)

@@ -13,3 +13,7 @@
 /.vs/VSWorkspaceState.json
 /.vs/Metamorphosis/CopilotIndices/17.12.38.29086
 /.vs/Metamorphosis/v17
+
+# Do not commit pre-built binaries; build from source or distribute via signed installer/releases
+/src/RevitFingerPrint/Dist/**/*.dll
+/src/RevitFingerPrint/Dist/**/*.exe

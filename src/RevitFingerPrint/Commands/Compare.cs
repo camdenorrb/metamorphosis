@@ -79,7 +79,7 @@ namespace Metamorphosis
                     
 
                     IntPtr currentRevitWin = Utilities.Utility.GetMainWindowHandle();
-                    if (currentRevitWin != null)
+                    if (currentRevitWin != IntPtr.Zero)
                     {
                         Utilities.WindowHandle handle = new Utilities.WindowHandle(currentRevitWin);
 

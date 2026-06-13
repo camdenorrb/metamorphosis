@@ -31,6 +31,7 @@ namespace Metamorphosis
         // TODO: separate categories by dictionary of category, elementid, parameter
         private Dictionary<long, RevitElement> _idValues = new Dictionary<long, RevitElement>();
         private Dictionary<long, RevitElement> _currentElems = new Dictionary<long, RevitElement>();
+        private Dictionary<string, RevitElement> _uniqueIdValues = new Dictionary<string, RevitElement>();
 
 
         #endregion
@@ -64,6 +65,113 @@ namespace Metamorphosis
             _useGuidCompare = Metamorphosis.Utilities.Settings.GetVersionGuidOption();
             doc.Application.WriteJournalComment("GuidCompare Option: " + _useGuidCompare, false);
             UseEpisodeGuid = false;
+        }
+
+        private ComparisonMaker()
+        {
+            MoveTolerance = 0.0006;
+            RotateTolerance = 0.0349f;
+            RequestedCategories = new List<Category>();
+            _allLevels = new List<Level>();
+        }
+        #endregion
+
+        #region OfflineAPI
+        internal static IList<Change> CompareOffline(string fromSdbPath, string toSdbPath)
+        {
+            var maker = new ComparisonMaker();
+            maker._idValues = ReadElementsFromSdb(fromSdbPath);
+            maker._currentElems = ReadElementsFromSdb(toSdbPath);
+            maker.buildUniqueIdIndex();
+            return maker.compareData();
+        }
+
+        private static Dictionary<long, RevitElement> ReadElementsFromSdb(string dbPath)
+        {
+            var paramDict = new Dictionary<int, string>();
+            var valueDict = new Dictionary<int, string>();
+            var result = new Dictionary<long, RevitElement>();
+
+            string dbFilename = dbPath;
+            if (dbPath.StartsWith(@"\\")) dbFilename = @"\\" + dbPath;
+
+            using (var conn = new SQLiteConnection("Data Source=" + dbFilename + ";Version=3;"))
+            {
+                conn.Open();
+
+                var cmd = conn.CreateCommand();
+                cmd.CommandText = "select id,name FROM _objects_attr";
+                using (var r = cmd.ExecuteReader())
+                    while (r.Read()) paramDict[r.GetInt32(0)] = r.GetString(1);
+
+                cmd = conn.CreateCommand();
+                cmd.CommandText = "select id,value FROM _objects_val";
+                using (var r = cmd.ExecuteReader())
+                    while (r.Read()) valueDict[r.GetInt32(0)] = r.GetString(1);
+
+                cmd = conn.CreateCommand();
+                cmd.CommandText = "select id,entity_id,attribute_id,value_id FROM _objects_eav";
+                using (var r = cmd.ExecuteReader())
+                {
+                    while (r.Read())
+                    {
+                        int entity_id = r.GetInt32(1);
+                        int attribute_id = r.GetInt32(2);
+                        int value_id = r.GetInt32(3);
+                        if (!result.ContainsKey(entity_id)) result[entity_id] = new RevitElement { ElementId = entity_id };
+                        result[entity_id].ParameterValueIds[attribute_id] = value_id;
+                        if (attribute_id == -1002067) continue;
+                        if (paramDict.TryGetValue(attribute_id, out string paramName) &&
+                            valueDict.TryGetValue(value_id, out string paramValue))
+                            result[entity_id].Parameters[paramName] = paramValue;
+                    }
+                }
+
+                cmd = conn.CreateCommand();
+                cmd.CommandText = "select id,external_id,category,isType,versionGuid FROM _objects_id";
+                using (var r = cmd.ExecuteReader())
+                {
+                    while (r.Read())
+                    {
+                        long id = r.GetInt64(0);
+                        if (!result.ContainsKey(id)) result[id] = new RevitElement { ElementId = id };
+                        result[id].UniqueId = r.GetString(1);
+                        result[id].Category = r.GetString(2);
+                        result[id].IsType = (r.GetInt32(3) == 1);
+                        if (!r.IsDBNull(4)) result[id].VersionGuid = r.GetString(4);
+                    }
+                }
+
+                cmd = conn.CreateCommand();
+                cmd.CommandText = "select id,BoundingBoxMin,BoundingBoxMax,Location,Location2,Level,Rotation FROM _objects_geom";
+                using (var r = cmd.ExecuteReader())
+                {
+                    while (r.Read())
+                    {
+                        long entity_id = r.GetInt64(0);
+                        if (!result.ContainsKey(entity_id)) continue;
+                        string bbMin = r.GetString(1);
+                        string bbMax = r.GetString(2);
+                        string lp = r.GetString(3);
+                        string lp2 = r.GetString(4);
+                        string levName = r.GetString(5);
+                        float rot = r.GetFloat(6);
+
+                        var elem = result[entity_id];
+                        if (!string.IsNullOrEmpty(bbMin))
+                            elem.BoundingBox = new BoundingBoxXYZ
+                            {
+                                Min = parsePoint(bbMin),
+                                Max = parsePoint(bbMax)
+                            };
+                        if (!string.IsNullOrEmpty(lp)) elem.LocationPoint = parsePoint(lp);
+                        if (!string.IsNullOrEmpty(lp2)) elem.LocationPoint2 = parsePoint(lp2);
+                        elem.Level = levName;
+                        elem.Rotation = rot;
+                    }
+                }
+            }
+            return result;
         }
         #endregion
 
@@ -102,7 +210,13 @@ namespace Metamorphosis
         public static ChangeSummary DeSerialize(string filename)
         {
             string content = System.IO.File.ReadAllText(filename);
-            ChangeSummary cs = Newtonsoft.Json.JsonConvert.DeserializeObject<ChangeSummary>(content);
+            // never honor embedded type names, and cap nesting depth, since this file may come from an untrusted source.
+            var settings = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                TypeNameHandling = Newtonsoft.Json.TypeNameHandling.None,
+                MaxDepth = 64
+            };
+            ChangeSummary cs = Newtonsoft.Json.JsonConvert.DeserializeObject<ChangeSummary>(content, settings);
 
             return cs;
         }
@@ -234,11 +348,17 @@ namespace Metamorphosis
             foreach (var currentPair in _currentElems)
             {
                 var current = currentPair.Value;
+                // UniqueId-primary matching: try UniqueId first, then fall back to ElementId
+                RevitElement previous = null;
+                if (!string.IsNullOrEmpty(current.UniqueId) && _uniqueIdValues.TryGetValue(current.UniqueId, out var byUid))
+                    previous = byUid;
+                else if (_idValues.ContainsKey(currentPair.Key))
+                    previous = _idValues[currentPair.Key];
+
                 // find it from the previous
-                if (_idValues.ContainsKey(currentPair.Key))
+                if (previous != null)
                 {
                     // it exists, so let's compare
-                    var previous = _idValues[currentPair.Key];
 
                     VersionGuidCompareEnum compare = VersionGuidCompareEnum.Unknown;
 #if REVIT2015 || REVIT2016 || REVIT2017 || REVIT2018 || REVIT2019 || REVIT2020
@@ -267,25 +387,30 @@ namespace Metamorphosis
 #if DEBUG
                             System.Diagnostics.Debug.Assert(false, "This should have been matching. why is there a change?");
 #endif
-                            _doc.Application.WriteJournalComment("Note: Odd element that should match but doesn't: " + current.Category + ": " + change.ChangeDescription, false);
+                            if (_doc != null)
+                                _doc.Application.WriteJournalComment("Note: Odd element that should match but doesn't: " + current.Category + ": " + change.ChangeDescription, false);
                         }
                         changes.Add(change);
                     }
                 }
                 else
                 {
-                    // it has been removed.
+                    // new element (not present in previous snapshot)
                     changes.Add(buildNew(current));
                 }
             }
 
-            // now look for deleted items
+            // now look for deleted items — element in previous but not in current
             foreach (var previousPair in _idValues)
             {
-                if (_currentElems.ContainsKey(previousPair.Key) == false)
+                var prev = previousPair.Value;
+                bool existsInCurrent = (!string.IsNullOrEmpty(prev.UniqueId) && _currentElems.Values
+                        .Any(c => c.UniqueId == prev.UniqueId))
+                    || _currentElems.ContainsKey(previousPair.Key);
+                if (!existsInCurrent)
                 {
-                    if (!AllCategories && (_requestedCategoryNames.Contains(previousPair.Value.Category) == false)) continue; // do not include
-                    changes.Add(buildDeleted(previousPair.Value));
+                    if (!AllCategories && (_requestedCategoryNames.Contains(prev.Category) == false)) continue;
+                    changes.Add(buildDeleted(prev));
                 }
             }
 
@@ -321,13 +446,18 @@ namespace Metamorphosis
 
         private Change buildNew(RevitElement current)
         {
+            string uniqueId = current.UniqueId;
+            if (_doc != null)
+            {
 #if LONGELEMENTIDS
-            Element e = _doc.GetElement(new ElementId(current.ElementId));
+                Element e = _doc.GetElement(new ElementId(current.ElementId));
 #else
-            Element e = _doc.GetElement(new ElementId((int)current.ElementId));
+                Element e = _doc.GetElement(new ElementId((int)current.ElementId));
 #endif
+                if (e != null) uniqueId = e.UniqueId;
+            }
 
-            Change c = new Change() { ElementId = current.ElementId, UniqueId = e.UniqueId, Category = current.Category, ChangeType = Change.ChangeTypeEnum.NewElement, Level = (current.Level != null) ? current.Level : "", IsType = current.IsType };
+            Change c = new Change() { ElementId = current.ElementId, UniqueId = uniqueId, Category = current.Category, ChangeType = Change.ChangeTypeEnum.NewElement, Level = (current.Level != null) ? current.Level : "", IsType = current.IsType };
             c.BoundingBoxDescription = Utilities.RevitUtils.SerializeBoundingBox(current.BoundingBox);
 
             return c;
@@ -626,6 +756,14 @@ namespace Metamorphosis
             readValues();
             readElements();
             readGeometry();
+            buildUniqueIdIndex();
+        }
+
+        private void buildUniqueIdIndex()
+        {
+            foreach (var kv in _idValues)
+                if (!string.IsNullOrEmpty(kv.Value.UniqueId))
+                    _uniqueIdValues[kv.Value.UniqueId] = kv.Value;
         }
 
         private void readHeader()
@@ -874,7 +1012,7 @@ namespace Metamorphosis
 #if REVIT2015 || REVIT2016 || REVIT2017 || REVIT2018 || REVIT2019 || REVIT2020
                 // do nothing here
 #else
-            if (e.VersionGuid != null) revitElem.VersionGuid = e.VersionGuid.ToString();
+            if (e.VersionGuid != Guid.Empty) revitElem.VersionGuid = e.VersionGuid.ToString();
 #endif
 
             if (withParams)
@@ -1014,7 +1152,7 @@ namespace Metamorphosis
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
-        private XYZ parsePoint(string input)
+        private static XYZ parsePoint(string input)
         {
             if (String.IsNullOrEmpty(input)) return null;
 

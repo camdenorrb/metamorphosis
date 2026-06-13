@@ -78,7 +78,7 @@ namespace Metamorphosis
                     
 
                     IntPtr currentRevitWin = Utilities.Utility.GetMainWindowHandle();
-                    if (currentRevitWin != null)
+                    if (currentRevitWin != IntPtr.Zero)
                     {
                         Utilities.WindowHandle handle = new Utilities.WindowHandle(currentRevitWin);
 
@@ -146,11 +146,22 @@ namespace Metamorphosis
    
         private string getFile(string url)
         {
-            System.Net.WebClient client = new System.Net.WebClient();
+            Uri uri = new Uri(url);
+            if (uri.Scheme != Uri.UriSchemeHttps)
+            {
+                throw new ApplicationException("Comparison files can only be downloaded over HTTPS: " + url);
+            }
 
-            string filename = Path.GetFileName(url);
+            string filename = Path.GetFileName(uri.LocalPath);
+            foreach (char c in Path.GetInvalidFileNameChars()) filename = filename.Replace(c, '_');
+            if (String.IsNullOrWhiteSpace(filename)) filename = "comparison.json";
             filename = Path.Combine(Path.GetTempPath(), filename);
-            client.DownloadFile(url, filename);
+
+            using (var client = new System.Net.Http.HttpClient())
+            {
+                byte[] data = client.GetByteArrayAsync(uri).GetAwaiter().GetResult();
+                File.WriteAllBytes(filename, data);
+            }
 
             return filename;
         }

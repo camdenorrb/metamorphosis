@@ -41,8 +41,9 @@ namespace Metamorphosis.Utilities
             string val = node.Attributes["color"].Value;
 
 
+            // FromName never returns null; an unrecognized name yields a non-known color, so fall through to RGB parsing.
             System.Drawing.Color c = System.Drawing.Color.FromName(val);
-            if (c != null)
+            if (c.IsKnownColor)
             {
                 return new Autodesk.Revit.DB.Color(c.R, c.G, c.B);
             }
@@ -168,6 +169,7 @@ namespace Metamorphosis.Utilities
             if (_doc != null) return;
 
             _doc = new XmlDocument();
+            _doc.XmlResolver = null; // do not resolve external entities
 
             
                 string filename = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Settings.xml");

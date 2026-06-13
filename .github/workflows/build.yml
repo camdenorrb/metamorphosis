@@ -1,0 +1,141 @@
+name: Build Addin
+
+on:
+  push:
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# the v4 actions default to deprecated Node 20; opt in to Node 24 ahead of GitHub's forced switch
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - revit: 2026
+            config: Release
+            tfm: net8.0-windows
+          - revit: 2025
+            config: Release2025
+            tfm: net8.0-windows
+          - revit: 2024
+            config: Release2024
+            tfm: net48
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Build MetamorphosisCore (Revit ${{ matrix.revit }})
+        run: dotnet build src/MetamorphosisCore/MetamorphosisCore.csproj -c ${{ matrix.config }}
+
+      - name: Build Metamorphosis.Git (Revit ${{ matrix.revit }})
+        run: dotnet build src/Metamorphosis.Git/Metamorphosis.Git.csproj -c ${{ matrix.config }}
+
+      - name: Stage addin layout
+        shell: pwsh
+        run: |
+          $out = "src/MetamorphosisCore/bin/Release${{ matrix.revit }}/${{ matrix.tfm }}"
+          New-Item -ItemType Directory -Path "artifact/Metamorphosis" -Force | Out-Null
+          Copy-Item "$out/*" "artifact/Metamorphosis" -Recurse
+          # Ensure SQLite.Interop.dll is flat next to System.Data.SQLite.dll so Revit's
+          # addin loader can find it. net8.0-windows puts it in runtimes/win-x64/native/;
+          # net48 (legacy MSBuild targets) puts it in x64\.
+          $interop = "$out/runtimes/win-x64/native/SQLite.Interop.dll"
+          if (Test-Path $interop) { Copy-Item $interop "artifact/Metamorphosis/" }
+          $interop64 = "$out/x64/SQLite.Interop.dll"
+          if (Test-Path $interop64) { Copy-Item $interop64 "artifact/Metamorphosis/" }
+          Copy-Item "src/MetaInstaller/MetamorphosisCore.addin" "artifact/"
+
+      - name: Upload addin artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Metamorphosis-Revit${{ matrix.revit }}
+          path: artifact/
+          if-no-files-found: error
+
+  test:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Run unit tests
+        run: dotnet test src/Metamorphosis.Tests/Metamorphosis.Tests.csproj --logger "trx;LogFileName=test-results.trx" --results-directory test-results
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: test-results/*.trx
+          if-no-files-found: warn
+
+  msi:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Build MetamorphosisCore (Revit 2026)
+        run: dotnet build src/MetamorphosisCore/MetamorphosisCore.csproj -c Release
+
+      - name: Build MetamorphosisCore (Revit 2025)
+        run: dotnet build src/MetamorphosisCore/MetamorphosisCore.csproj -c Release2025
+
+      - name: Build MetamorphosisCore (Revit 2024)
+        run: dotnet build src/MetamorphosisCore/MetamorphosisCore.csproj -c Release2024
+
+      - name: Build Metamorphosis.Git (Revit 2026)
+        run: dotnet build src/Metamorphosis.Git/Metamorphosis.Git.csproj -c Release
+
+      - name: Build Metamorphosis.Git (Revit 2025)
+        run: dotnet build src/Metamorphosis.Git/Metamorphosis.Git.csproj -c Release2025
+
+      - name: Build Metamorphosis.Git (Revit 2024)
+        run: dotnet build src/Metamorphosis.Git/Metamorphosis.Git.csproj -c Release2024
+
+      - name: Install WiX Toolset 3.14
+        run: choco install wixtoolset -y --no-progress
+
+      - name: Build MSI (Revit 2024-2026)
+        shell: pwsh
+        run: |
+          $wix = "${env:ProgramFiles(x86)}\WiX Toolset v3.14\bin"
+          if (!(Test-Path "$wix\candle.exe")) {
+            $wix = (Get-ChildItem "${env:ProgramFiles(x86)}\WiX Toolset*\bin\candle.exe" | Select-Object -First 1).DirectoryName
+          }
+          New-Item -ItemType Directory -Path out -Force | Out-Null
+          & "$wix\candle.exe" -nologo -dProjectDir="$PWD\src\MetaInstaller\" -o out\Product2024Plus.wixobj src\MetaInstaller\Product2024Plus.wxs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & "$wix\light.exe" -nologo -sval -o out\MetamorphosisInstaller-Revit2024-2026.msi out\Product2024Plus.wixobj
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Upload MSI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MetamorphosisInstaller-Revit2024-2026
+          path: out/*.msi
+          if-no-files-found: error

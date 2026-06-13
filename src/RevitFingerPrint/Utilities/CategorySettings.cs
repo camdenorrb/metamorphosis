@@ -54,6 +54,7 @@ namespace Metamorphosis.Utilities
                 try
                 {
                     XmlDocument doc = new XmlDocument();
+                    doc.XmlResolver = null; // do not resolve external entities
                     doc.Load(file);
 
                     CategorySettingsFile f = new CategorySettingsFile(file);

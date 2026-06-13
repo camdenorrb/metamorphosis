@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>Metamorphosis Git</Name>
+    <Assembly>.\MetamorphosisGit\Metamorphosis.Git.dll</Assembly>
+    <AddInId>8a3fd68e-bd27-40fd-8bdf-0ecadb342fa4</AddInId>
+    <FullClassName>Metamorphosis.Git.ExternalApp</FullClassName>
+    <VendorId>HACK</VendorId>
+    <VendorDescription>Metamorphosis Git — version control for Revit models</VendorDescription>
+  </AddIn>
+</RevitAddIns>
