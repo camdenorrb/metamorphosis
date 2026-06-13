@@ -65,6 +65,112 @@ namespace Metamorphosis
             doc.Application.WriteJournalComment("GuidCompare Option: " + _useGuidCompare, false);
             UseEpisodeGuid = false;
         }
+
+        private ComparisonMaker()
+        {
+            MoveTolerance = 0.0006;
+            RotateTolerance = 0.0349f;
+            RequestedCategories = new List<Category>();
+            _allLevels = new List<Level>();
+        }
+        #endregion
+
+        #region OfflineAPI
+        internal static IList<Change> CompareOffline(string fromSdbPath, string toSdbPath)
+        {
+            var maker = new ComparisonMaker();
+            maker._idValues = ReadElementsFromSdb(fromSdbPath);
+            maker._currentElems = ReadElementsFromSdb(toSdbPath);
+            return maker.compareData();
+        }
+
+        private static Dictionary<long, RevitElement> ReadElementsFromSdb(string dbPath)
+        {
+            var paramDict = new Dictionary<int, string>();
+            var valueDict = new Dictionary<int, string>();
+            var result = new Dictionary<long, RevitElement>();
+
+            string dbFilename = dbPath;
+            if (dbPath.StartsWith(@"\\")) dbFilename = @"\\" + dbPath;
+
+            using (var conn = new SQLiteConnection("Data Source=" + dbFilename + ";Version=3;"))
+            {
+                conn.Open();
+
+                var cmd = conn.CreateCommand();
+                cmd.CommandText = "select id,name FROM _objects_attr";
+                using (var r = cmd.ExecuteReader())
+                    while (r.Read()) paramDict[r.GetInt32(0)] = r.GetString(1);
+
+                cmd = conn.CreateCommand();
+                cmd.CommandText = "select id,value FROM _objects_val";
+                using (var r = cmd.ExecuteReader())
+                    while (r.Read()) valueDict[r.GetInt32(0)] = r.GetString(1);
+
+                cmd = conn.CreateCommand();
+                cmd.CommandText = "select id,entity_id,attribute_id,value_id FROM _objects_eav";
+                using (var r = cmd.ExecuteReader())
+                {
+                    while (r.Read())
+                    {
+                        int entity_id = r.GetInt32(1);
+                        int attribute_id = r.GetInt32(2);
+                        int value_id = r.GetInt32(3);
+                        if (!result.ContainsKey(entity_id)) result[entity_id] = new RevitElement { ElementId = entity_id };
+                        result[entity_id].ParameterValueIds[attribute_id] = value_id;
+                        if (attribute_id == -1002067) continue;
+                        if (paramDict.TryGetValue(attribute_id, out string paramName) &&
+                            valueDict.TryGetValue(value_id, out string paramValue))
+                            result[entity_id].Parameters[paramName] = paramValue;
+                    }
+                }
+
+                cmd = conn.CreateCommand();
+                cmd.CommandText = "select id,external_id,category,isType,versionGuid FROM _objects_id";
+                using (var r = cmd.ExecuteReader())
+                {
+                    while (r.Read())
+                    {
+                        long id = r.GetInt64(0);
+                        if (!result.ContainsKey(id)) result[id] = new RevitElement { ElementId = id };
+                        result[id].UniqueId = r.GetString(1);
+                        result[id].Category = r.GetString(2);
+                        result[id].IsType = (r.GetInt32(3) == 1);
+                        if (!r.IsDBNull(4)) result[id].VersionGuid = r.GetString(4);
+                    }
+                }
+
+                cmd = conn.CreateCommand();
+                cmd.CommandText = "select id,BoundingBoxMin,BoundingBoxMax,Location,Location2,Level,Rotation FROM _objects_geom";
+                using (var r = cmd.ExecuteReader())
+                {
+                    while (r.Read())
+                    {
+                        long entity_id = r.GetInt64(0);
+                        if (!result.ContainsKey(entity_id)) continue;
+                        string bbMin = r.GetString(1);
+                        string bbMax = r.GetString(2);
+                        string lp = r.GetString(3);
+                        string lp2 = r.GetString(4);
+                        string levName = r.GetString(5);
+                        float rot = r.GetFloat(6);
+
+                        var elem = result[entity_id];
+                        if (!string.IsNullOrEmpty(bbMin))
+                            elem.BoundingBox = new BoundingBoxXYZ
+                            {
+                                Min = parsePoint(bbMin),
+                                Max = parsePoint(bbMax)
+                            };
+                        if (!string.IsNullOrEmpty(lp)) elem.LocationPoint = parsePoint(lp);
+                        if (!string.IsNullOrEmpty(lp2)) elem.LocationPoint2 = parsePoint(lp2);
+                        elem.Level = levName;
+                        elem.Rotation = rot;
+                    }
+                }
+            }
+            return result;
+        }
         #endregion
 
         #region PublicMethods
@@ -273,7 +379,8 @@ namespace Metamorphosis
 #if DEBUG
                             System.Diagnostics.Debug.Assert(false, "This should have been matching. why is there a change?");
 #endif
-                            _doc.Application.WriteJournalComment("Note: Odd element that should match but doesn't: " + current.Category + ": " + change.ChangeDescription, false);
+                            if (_doc != null)
+                                _doc.Application.WriteJournalComment("Note: Odd element that should match but doesn't: " + current.Category + ": " + change.ChangeDescription, false);
                         }
                         changes.Add(change);
                     }
@@ -327,13 +434,18 @@ namespace Metamorphosis
 
         private Change buildNew(RevitElement current)
         {
+            string uniqueId = current.UniqueId;
+            if (_doc != null)
+            {
 #if LONGELEMENTIDS
-            Element e = _doc.GetElement(new ElementId(current.ElementId));
+                Element e = _doc.GetElement(new ElementId(current.ElementId));
 #else
-            Element e = _doc.GetElement(new ElementId((int)current.ElementId));
+                Element e = _doc.GetElement(new ElementId((int)current.ElementId));
 #endif
+                if (e != null) uniqueId = e.UniqueId;
+            }
 
-            Change c = new Change() { ElementId = current.ElementId, UniqueId = e.UniqueId, Category = current.Category, ChangeType = Change.ChangeTypeEnum.NewElement, Level = (current.Level != null) ? current.Level : "", IsType = current.IsType };
+            Change c = new Change() { ElementId = current.ElementId, UniqueId = uniqueId, Category = current.Category, ChangeType = Change.ChangeTypeEnum.NewElement, Level = (current.Level != null) ? current.Level : "", IsType = current.IsType };
             c.BoundingBoxDescription = Utilities.RevitUtils.SerializeBoundingBox(current.BoundingBox);
 
             return c;
@@ -1020,7 +1132,7 @@ namespace Metamorphosis
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
-        private XYZ parsePoint(string input)
+        private static XYZ parsePoint(string input)
         {
             if (String.IsNullOrEmpty(input)) return null;
 
